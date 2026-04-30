@@ -23,11 +23,18 @@ public class AccountService implements IAccountService {
         BigDecimal soldeInitial = request.soldeInitial() != null
                 ? request.soldeInitial()
                 : BigDecimal.ZERO;
+                
+        // Generate a random 10-digit account number
+        String accountNumber = java.util.UUID.randomUUID().toString().replaceAll("-", "").substring(0, 10).toUpperCase();
+        
+        String accountType = request.accountType() != null ? request.accountType() : "CURRENT";
 
         Account account = new Account(
                 request.name(),
                 request.currency() != null ? request.currency() : "XAF",
-                soldeInitial
+                soldeInitial,
+                accountNumber,
+                accountType
         );
 
         return accountRepo.save(account);

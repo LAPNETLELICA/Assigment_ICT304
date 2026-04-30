@@ -40,7 +40,7 @@ Spring Boot applications are usually divided into "Layers". Each file is in a sp
 **What it does:** This is the blueprint of what a Bank Account looks like in the database.
 - `@Entity` and `@Table(name = "accounts")`: Tells the database, "Please create a table named 'accounts' to store this data."
 - `@Id` and `@GeneratedValue`: Automatically generates a unique ID (1, 2, 3...) for every new account.
-- Other fields like `name`, `currency`, and `solde` (balance) represent the columns in the database table.
+- Other fields like `accountNumber`, `accountType`, `status`, `name`, `currency`, and `solde` (balance) represent the columns in the database table to make it a realistic bank account.
 
 ### B. The DTO Layer (`dto/CreateAccountRequest.java` & `dto/UpdateAccountRequest.java`)
 **What it does:** These files define the exact structure of the JSON data we expect the user to send us when they want to create or update an account.
@@ -55,7 +55,7 @@ Spring Boot applications are usually divided into "Layers". Each file is in a sp
 **What it does:** This is the **Brain** of your application. It contains the "Business Logic". The Controller asks the Service to do the work.
 - `IAccountService` is an **Interface**. Think of it as a contract that lists all the abilities the service *must* have (create, read, update, delete).
 - `AccountService` is the actual worker that implements that contract.
-  - **`createAccount`**: Checks the starting balance and creates a new `Account` object, then asks the Repository to save it.
+  - **`createAccount`**: Generates a unique `accountNumber` automatically, checks the starting balance, assigns an `accountType` and `status`, creates a new `Account` object, then asks the Repository to save it.
   - **`getAccountById`**: Asks the Repository to find an account. If it doesn't exist, it throws a `NotfoundException` (Error 404).
   - **`updateAccount`**: (What we added!). It first finds the account. If a new name was provided in the request, it changes the name. Finally, it saves the updated account back to the database.
   - **`deleteAccount`**: (What we added!). It finds the account, then tells the Repository to delete it.

@@ -5,5 +5,6 @@ import java.math.BigDecimal;
 public record CreateAccountRequest(
         String name,
         String currency,
-        BigDecimal soldeInitial
+        BigDecimal soldeInitial,
+        String accountType
 ) {}
