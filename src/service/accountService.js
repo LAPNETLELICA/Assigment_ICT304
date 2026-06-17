@@ -9,7 +9,8 @@ class AccountService {
     if (!payload || !payload.name) throw new Error('Invalid payload');
     const acc = {
       name: payload.name,
-      balance: typeof payload.balance === 'number' ? payload.balance : 0
+      balance: typeof payload.balance === 'number' ? payload.balance : 0,
+      owner_id: payload.owner_id || payload.ownerId || null
     };
     return this.repo.save(acc);
   }
@@ -18,8 +19,8 @@ class AccountService {
     return this.repo.findById(id);
   }
 
-  getAll() {
-    return this.repo.findAll();
+  getAll(ownerId = null) {
+    return this.repo.findAll(ownerId);
   }
 
   updateAccount(id, payload) {

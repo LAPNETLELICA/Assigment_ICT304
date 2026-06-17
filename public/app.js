@@ -8,7 +8,9 @@ async function createAccount() {
   const name = document.getElementById('name').value.trim();
   const balance = parseFloat(document.getElementById('balance').value) || 0;
   try {
-    const data = await api('/api/accounts', { method: 'POST', body: JSON.stringify({ name, balance }) });
+    const token = localStorage.getItem('token');
+    const owner_id = token || null;
+    const data = await api('/api/accounts', { method: 'POST', body: JSON.stringify({ name, balance, owner_id }) });
     document.getElementById('createResult').innerText = `Created: ${data.name}`;
     document.getElementById('name').value = '';
     document.getElementById('balance').value = '';
@@ -23,7 +25,9 @@ async function refreshList() {
   const container = document.getElementById('listContainer');
   container.innerText = 'Loading...';
   try {
-    const list = await api('/api/accounts');
+    const token = localStorage.getItem('token');
+    const q = token ? '?owner_id=' + token : '';
+    const list = await api('/api/accounts' + q);
     if (!Array.isArray(list) || list.length === 0) {
       container.innerText = 'No accounts';
       return;
@@ -66,6 +70,53 @@ async function refreshList() {
     container.innerText = 'Error loading accounts';
   }
 }
+
+// Authentication UI
+async function signup() {
+  const u = document.getElementById('username').value.trim();
+  const p = document.getElementById('password').value;
+  try {
+    const res = await api('/api/auth/signup', { method: 'POST', body: JSON.stringify({ username: u, password: p }) });
+    document.getElementById('authResult').innerText = 'Signed up — please login';
+  } catch (e) { document.getElementById('authResult').innerText = 'Error: ' + (e.message || e.error); }
+}
+
+async function login() {
+  const u = document.getElementById('username').value.trim();
+  const p = document.getElementById('password').value;
+  try {
+    const res = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ username: u, password: p }) });
+    localStorage.setItem('token', res.token);
+    localStorage.setItem('username', res.username);
+    document.getElementById('authResult').innerText = 'Welcome ' + res.username;
+    showDashboard();
+  } catch (e) { document.getElementById('authResult').innerText = 'Login failed'; }
+}
+
+function showDashboard() {
+  document.getElementById('authCard').style.display = 'none';
+  document.getElementById('dashboardCard').style.display = 'block';
+  refreshList();
+}
+
+function logout() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('username');
+  document.getElementById('authCard').style.display = 'block';
+  document.getElementById('dashboardCard').style.display = 'none';
+}
+
+document.getElementById('signup').addEventListener('click', signup);
+document.getElementById('login').addEventListener('click', login);
+document.getElementById('newAccount').addEventListener('click', () => {
+  const name = prompt('Account name');
+  if (!name) return;
+  const bal = prompt('Initial balance', '0');
+  document.getElementById('name').value = name;
+  document.getElementById('balance').value = bal;
+  createAccount();
+});
+document.getElementById('logout').addEventListener('click', logout);
 
 function openTransferModal(defaultFrom) {
   // build modal
@@ -123,4 +174,7 @@ async function exportTransactionsCSV(accountId) {
 
 document.getElementById('create').addEventListener('click', createAccount);
 document.getElementById('refresh').addEventListener('click', refreshList);
-window.addEventListener('load', refreshList);
+window.addEventListener('load', () => {
+  const token = localStorage.getItem('token');
+  if (token) showDashboard();
+});

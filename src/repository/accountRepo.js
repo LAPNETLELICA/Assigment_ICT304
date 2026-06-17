@@ -36,9 +36,10 @@ class AccountRepo {
     const id = account.id || uuidv4();
     const name = account.name || '';
     const balance = typeof account.balance === 'number' ? account.balance : 0;
+    const owner_id = account.owner_id || account.ownerId || null;
 
     const existingIndex = this._data.accounts.findIndex(a => a.id === id);
-    const obj = { id, name, balance };
+    const obj = { id, name, balance, owner_id };
     if (existingIndex >= 0) {
       this._data.accounts[existingIndex] = obj;
     } else {
@@ -52,8 +53,9 @@ class AccountRepo {
     return this._data.accounts.find(a => a.id === id) || null;
   }
 
-  findAll() {
-    return Array.from(this._data.accounts);
+  findAll(ownerId = null) {
+    if (!ownerId) return Array.from(this._data.accounts);
+    return this._data.accounts.filter(a => a.owner_id === ownerId);
   }
 
   delete(id) {

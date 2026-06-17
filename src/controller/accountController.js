@@ -1,20 +1,26 @@
 const express = require('express');
 const router = express.Router();
 const AccountService = require('../service/accountService');
+const UserRepo = require('../repository/userRepo');
 
 const service = new AccountService();
+const userRepo = new UserRepo();
 
+// create bank account for authenticated user (owner id expected in body)
 router.post('/', (req, res) => {
   try {
-    const acc = service.createAccount(req.body);
+    const ownerId = req.body.owner_id || req.body.ownerId || null;
+    const acc = service.createAccount(Object.assign({}, req.body, { owner_id: ownerId }));
     res.status(201).json(acc);
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
 });
 
+// list accounts, optionally filtered by owner_id query param
 router.get('/', (req, res) => {
-  const all = service.getAll();
+  const ownerId = req.query.owner_id || req.query.ownerId || null;
+  const all = service.getAll(ownerId);
   res.json(all);
 });
 

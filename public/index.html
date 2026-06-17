@@ -20,21 +20,26 @@
       </div>
 
       <div class="grid">
-        <section class="card">
-          <h2>Accounts</h2>
-          <div id="listContainer">Loading...</div>
+        <section class="card" id="authCard">
+          <h2>Client Login</h2>
+          <label>Username</label>
+          <input id="username" placeholder="your email or username" />
+          <label>Password</label>
+          <input id="password" type="password" placeholder="password" />
+          <div class="row">
+            <button id="signup" class="secondary">Sign up</button>
+            <button id="login">Login</button>
+          </div>
+          <div id="authResult" class="muted"></div>
         </section>
 
-        <section class="card" id="createCard">
-          <h2>Create Account</h2>
-          <label>Name</label>
-          <input id="name" placeholder="Account name" />
-          <label>Balance</label>
-          <input id="balance" type="number" placeholder="0" />
-          <div class="row">
-            <button id="create">Create</button>
-            <button id="refresh" class="secondary">Refresh</button>
+        <section class="card" id="dashboardCard" style="display:none">
+          <h2>Your Dashboard</h2>
+          <div style="margin-bottom:0.5rem">
+            <button id="newAccount" class="secondary">Create Bank Account</button>
+            <button id="logout" class="secondary">Logout</button>
           </div>
+          <div id="listContainer">Loading...</div>
           <div id="createResult" class="muted"></div>
         </section>
       </div>
