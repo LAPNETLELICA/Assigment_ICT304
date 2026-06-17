@@ -1,16 +1,19 @@
 {
-  "accounts": {
-    "07119d92-5b57-4dd1-9abd-6d97b9837165": {
-      "id": "07119d92-5b57-4dd1-9abd-6d97b9837165",
-      "name": "From",
-      "balance": 70,
-      "transactions": []
-    },
-    "3f653159-e824-4a1d-b8fa-2f77212762f6": {
-      "id": "3f653159-e824-4a1d-b8fa-2f77212762f6",
-      "name": "To",
-      "balance": 40,
-      "transactions": []
+  "accounts": [
+    {
+      "id": "c8305c81-12e9-4522-a348-1e6de29a693d",
+      "name": "TxAcc",
+      "balance": 100
     }
-  }
+  ],
+  "transactions": [
+    {
+      "account_id": "c8305c81-12e9-4522-a348-1e6de29a693d",
+      "id": "a14f2cc3-e972-4531-b1a2-f0eef1c7cb1f",
+      "type": "deposit",
+      "amount": 100,
+      "description": "seed",
+      "date": "2026-06-17T11:09:26.867Z"
+    }
+  ]
 }

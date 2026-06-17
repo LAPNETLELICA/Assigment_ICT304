@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: untitled-node-app
+    env: node
+    repo: https://github.com/LAPNETLELICA/Assigment_ICT304
+    branch: appmod/js-rewrite-manual-session-20260617-001
+    buildCommand: "npm ci"
+    startCommand: "npm start"
+    plan: free

@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
-const fs = require('fs');
 const path = require('path');
+const fs = require('fs');
 
 const DATA_DIR = path.join(__dirname, '..', '..', 'data');
 const DATA_FILE = path.join(DATA_DIR, 'db.json');
@@ -9,80 +9,79 @@ function ensureDataDir() {
   try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch (e) {}
 }
 
-function readFile() {
+function readData() {
+  ensureDataDir();
   try {
-    if (!fs.existsSync(DATA_FILE)) return null;
-    const txt = fs.readFileSync(DATA_FILE, 'utf8');
-    return JSON.parse(txt || '{}');
+    const raw = fs.readFileSync(DATA_FILE, 'utf8');
+    return JSON.parse(raw);
   } catch (e) {
-    return null;
+    return { accounts: [], transactions: [] };
   }
 }
 
-function writeFile(obj) {
-  try {
-    ensureDataDir();
-    fs.writeFileSync(DATA_FILE, JSON.stringify(obj, null, 2), 'utf8');
-  } catch (e) {
-    // ignore write errors for now
-  }
+function writeData(data) {
+  ensureDataDir();
+  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
 
 class AccountRepo {
   constructor() {
-    if (!AccountRepo.store) {
-      AccountRepo.store = new Map();
-      // try to load persisted data
-      const data = readFile();
-      if (data && data.accounts) {
-        Object.values(data.accounts).forEach(a => AccountRepo.store.set(a.id, a));
-      }
+    if (!AccountRepo._data) {
+      AccountRepo._data = readData();
     }
+    this._data = AccountRepo._data;
   }
 
   save(account) {
     const id = account.id || uuidv4();
-    const data = Object.assign({ id }, account);
-    // ensure transactions array exists
-    if (!Array.isArray(data.transactions)) data.transactions = account.transactions || [];
-    AccountRepo.store.set(id, data);
-    // persist
-    writeFile({ accounts: Object.fromEntries(AccountRepo.store) });
-    return data;
+    const name = account.name || '';
+    const balance = typeof account.balance === 'number' ? account.balance : 0;
+
+    const existingIndex = this._data.accounts.findIndex(a => a.id === id);
+    const obj = { id, name, balance };
+    if (existingIndex >= 0) {
+      this._data.accounts[existingIndex] = obj;
+    } else {
+      this._data.accounts.push(obj);
+    }
+    writeData(this._data);
+    return obj;
+  }
+
+  findById(id) {
+    return this._data.accounts.find(a => a.id === id) || null;
+  }
+
+  findAll() {
+    return Array.from(this._data.accounts);
+  }
+
+  delete(id) {
+    const before = this._data.accounts.length;
+    this._data.accounts = this._data.accounts.filter(a => a.id !== id);
+    this._data.transactions = this._data.transactions.filter(t => t.account_id !== id);
+    writeData(this._data);
+    return this._data.accounts.length < before;
+  }
+
+  clear() {
+    this._data.accounts = [];
+    this._data.transactions = [];
+    writeData(this._data);
   }
 
   addTransaction(accountId, tx) {
     const acc = this.findById(accountId);
     if (!acc) throw new Error('Account not found');
-    acc.transactions = acc.transactions || [];
-    acc.transactions.push(tx);
-    AccountRepo.store.set(accountId, acc);
-    return tx;
+    const record = Object.assign({ account_id: accountId }, tx);
+    this._data.transactions.push(record);
+    writeData(this._data);
+    return record;
   }
 
   getTransactions(accountId) {
-    const acc = this.findById(accountId);
-    if (!acc) return [];
-    return acc.transactions || [];
-  }
-
-  findById(id) {
-    return AccountRepo.store.get(id) || null;
-  }
-
-  findAll() {
-    return Array.from(AccountRepo.store.values());
-  }
-
-  delete(id) {
-    const ok = AccountRepo.store.delete(id);
-    writeFile({ accounts: Object.fromEntries(AccountRepo.store) });
-    return ok;
-  }
-
-  clear() {
-    AccountRepo.store.clear();
-    writeFile({ accounts: {} });
+    const rows = this._data.transactions.filter(t => t.account_id === accountId);
+    return rows.sort((a, b) => (b.date || '') > (a.date || '') ? 1 : -1);
   }
 }
 
