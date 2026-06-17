@@ -32,8 +32,7 @@ async function refreshList() {
     container.innerHTML = '';
     list.forEach(acc => {
       const node = tpl.content.cloneNode(true);
-      node.querySelector('.name').innerHTML = `${acc.name} <span class="id">(${acc.id.slice(0,8)}...)</span>`;
-      node.querySelector('.balance').innerText = '$' + acc.balance;
+        node.querySelector('.name').innerText = acc.name;
       const getBtn = node.querySelector('.btn-get');
       const editBtn = node.querySelector('.btn-edit');
       const delBtn = node.querySelector('.btn-del');
@@ -52,6 +51,7 @@ async function refreshList() {
         await refreshList();
       });
       const transferBtn = document.createElement('button');
+      transferBtn.className = 'transfer';
       transferBtn.textContent = 'Transfer';
       transferBtn.addEventListener('click', () => openTransferModal(acc.id));
       node.querySelector('.actions').appendChild(transferBtn);
