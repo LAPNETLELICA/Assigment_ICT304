@@ -68,6 +68,10 @@
                 <div class="input-wrapper">
                   <svg class="input-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                   <input id="password" type="password" placeholder="••••••••" required />
+                  <button type="button" id="togglePasswordBtn" class="btn-eye" title="Show/Hide password">
+                    <svg id="eyeIconShow" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg id="eyeIconHide" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  </button>
                 </div>
               </div>
 
@@ -110,9 +114,13 @@
                 <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 <span>New Account</span>
               </button>
+              <button id="triggerDepositBtn" class="btn btn-emerald">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span>Deposit</span>
+              </button>
               <button id="triggerTransferBtn" class="btn btn-accent">
-                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="17" x2="7" y2="7"/><polyline points="7 17 7 7 17 7"/><line x1="7" y1="17" x2="17" y2="7"/><polyline points="17 7 17 17 7 17"/></svg>
-                <span>Transfer Funds</span>
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                <span>Transfer</span>
               </button>
             </div>
           </div>
@@ -211,12 +219,22 @@
             </div>
           </div>
 
+          <!-- Retrieve by ID Panel -->
+          <div class="retrieve-by-id-bar">
+            <h3>&#128269; Find Account by ID</h3>
+            <div class="retrieve-input-row">
+              <input type="text" id="retrieveByIdInput" placeholder="Paste full Account UUID here..." />
+              <button id="retrieveByIdBtn" class="btn btn-primary">Retrieve</button>
+            </div>
+            <div id="retrieveByIdResult" class="retrieve-result" style="display:none;"></div>
+          </div>
+
           <!-- Directory Header -->
           <div class="directory-control-bar">
-            <h2>Account Registry</h2>
+            <h2>Account Registry &mdash; All Accounts</h2>
             <div class="search-box">
               <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input type="text" id="managerSearchInput" placeholder="Search by name, ID or owner..." />
+              <input type="text" id="managerSearchInput" placeholder="Search by name, ID or username..." />
             </div>
           </div>
 
@@ -225,9 +243,9 @@
             <table class="registry-table">
               <thead>
                 <tr>
-                  <th>Account ID</th>
+                  <th>Account ID <span class="th-hint">(click to copy)</span></th>
                   <th>Account Name</th>
-                  <th>Owner ID / Username</th>
+                  <th>Owner Username</th>
                   <th>Balance</th>
                   <th>Actions</th>
                 </tr>
@@ -299,32 +317,65 @@
       </div>
     </div>
 
-    <!-- TRANSFER FUNDS MODAL -->
-    <div id="transferModal" class="modal-backdrop" style="display: none;">
+    <!-- DEPOSIT MODAL -->
+    <div id="depositModal" class="modal-backdrop" style="display: none;">
       <div class="modal-card">
         <div class="modal-header">
-          <h3>Transfer Money</h3>
+          <h3>&#128176; Add Funds (Deposit)</h3>
           <button class="btn-close modal-close-btn">&times;</button>
         </div>
         <div class="modal-body">
           <div class="input-group">
-            <label for="transferFromSelect">Transfer From</label>
-            <select id="transferFromSelect">
-              <option value="">Select source account</option>
+            <label for="depositAccountSelect">Select Account</label>
+            <select id="depositAccountSelect">
+              <option value="">Choose account to deposit into...</option>
             </select>
           </div>
           <div class="input-group">
-            <label for="transferToSelect">Transfer To</label>
+            <label for="depositAmount">Amount ($)</label>
+            <input type="number" id="depositAmount" placeholder="0.00" min="0.01" step="0.01" />
+          </div>
+          <div class="input-group">
+            <label for="depositDescription">Description (optional)</label>
+            <input type="text" id="depositDescription" placeholder="e.g. Salary, Cash deposit" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary modal-close-btn">Cancel</button>
+          <button id="submitDepositBtn" class="btn btn-emerald">Deposit Funds</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSFER FUNDS MODAL -->
+    <div id="transferModal" class="modal-backdrop" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>&#8652; Transfer Money</h3>
+          <button class="btn-close modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="input-group">
+            <label for="transferFromSelect">Transfer From (Your Account)</label>
+            <select id="transferFromSelect">
+              <option value="">Select your source account</option>
+            </select>
+          </div>
+
+          <div class="transfer-divider"><span>SEND TO</span></div>
+
+          <div class="input-group">
+            <label for="transferToSelect">Select Destination Account</label>
             <select id="transferToSelect">
               <option value="">Select destination account</option>
             </select>
           </div>
-          
-          <div class="or-separator"><span>OR ENTER ACCOUNT ID</span></div>
-          
+
+          <div class="or-separator"><span>OR TYPE ACCOUNT ID DIRECTLY</span></div>
+
           <div class="input-group">
             <label for="transferToInput">Destination Account ID</label>
-            <input type="text" id="transferToInput" placeholder="Paste account UUID directly" />
+            <input type="text" id="transferToInput" placeholder="Paste full UUID (copy from Manager dashboard)" />
           </div>
 
           <div class="input-group">
@@ -333,7 +384,7 @@
           </div>
           <div class="input-group">
             <label for="transferDescription">Description</label>
-            <input type="text" id="transferDescription" placeholder="Description of transfer" />
+            <input type="text" id="transferDescription" placeholder="e.g. Rent payment, Gift" />
           </div>
         </div>
         <div class="modal-footer">

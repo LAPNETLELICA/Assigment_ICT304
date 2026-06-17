@@ -32,14 +32,26 @@
       "username": "manager_admin1",
       "password": "password123",
       "role": "client"
+    },
+    {
+      "id": "1b054397-b25c-4ba2-887e-658aee747286",
+      "username": "malika",
+      "password": "12345",
+      "role": "client"
+    },
+    {
+      "id": "812322fe-7861-4d0c-84b7-51f6484e18f8",
+      "username": "fadil",
+      "password": "1234",
+      "role": "client"
     }
   ],
   "accounts": [
     {
-      "id": "f27c5450-a1e6-4c8c-a16e-0460a8e77640",
+      "id": "1ac0e578-58a8-4a22-985e-d09dec500579",
       "name": "ClientAcc",
       "balance": 0,
-      "owner_id": "b39c8fe7-02ce-4527-a3aa-1e3ba05c4d52"
+      "owner_id": "96c4055e-debe-4be1-86dc-6f5b6f2cf8b6"
     }
   ],
   "transactions": []

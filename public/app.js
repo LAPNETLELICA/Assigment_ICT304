@@ -283,11 +283,69 @@ async function handleCreateAccount() {
       })
     });
     
-    showToast(`Successfully created ${name}!`, 'success');
+    showToast(`Successfully created "${name}" with ${formatCurrency(balance)} initial deposit!`, 'success');
     closeModal('createAccountModal');
     loadClientDashboard();
   } catch (e) {
     showToast(e.message || 'Failed to create account', 'error');
+  }
+}
+
+// --- DEPOSIT MODAL LOGIC ---
+
+async function openDepositModal() {
+  const sel = document.getElementById('depositAccountSelect');
+  sel.innerHTML = '<option value="">Loading accounts...</option>';
+  document.getElementById('depositAmount').value = '';
+  document.getElementById('depositDescription').value = '';
+
+  try {
+    const accounts = await api(`/api/accounts?owner_id=${activeUser.token}`);
+    sel.innerHTML = '<option value="">Choose account to deposit into...</option>';
+    if (accounts.length === 0) {
+      sel.innerHTML = '<option value="">No accounts found — create one first</option>';
+    } else {
+      accounts.forEach(acc => {
+        const opt = document.createElement('option');
+        opt.value = acc.id;
+        opt.text = `${acc.name}  —  ${formatCurrency(acc.balance)}`;
+        sel.appendChild(opt);
+      });
+    }
+    openModal('depositModal');
+  } catch (e) {
+    showToast('Failed to load accounts for deposit', 'error');
+  }
+}
+
+async function handleDeposit() {
+  const accountId = document.getElementById('depositAccountSelect').value;
+  const amount = parseFloat(document.getElementById('depositAmount').value);
+  const description = document.getElementById('depositDescription').value.trim();
+
+  if (!accountId) {
+    showToast('Please select an account', 'error');
+    return;
+  }
+  if (isNaN(amount) || amount <= 0) {
+    showToast('Please enter a valid deposit amount', 'error');
+    return;
+  }
+
+  try {
+    await api(`/api/accounts/${accountId}/transactions`, {
+      method: 'POST',
+      body: JSON.stringify({
+        type: 'deposit',
+        amount,
+        description: description || 'Deposit via Web Portal'
+      })
+    });
+    showToast(`Deposited ${formatCurrency(amount)} successfully!`, 'success');
+    closeModal('depositModal');
+    loadClientDashboard();
+  } catch (e) {
+    showToast(e.message || 'Deposit failed', 'error');
   }
 }
 
@@ -626,6 +684,9 @@ async function exportTransactionsCSV(accountId, accountName) {
 
 // --- MANAGER AUDIT FLOWS ---
 
+// Global user map: id -> username, populated by loadManagerDashboard
+let userMap = {};
+
 async function loadManagerDashboard() {
   const tableBody = document.getElementById('managerAccountsTableBody');
   tableBody.innerHTML = `
@@ -636,10 +697,19 @@ async function loadManagerDashboard() {
       </td>
     </tr>
   `;
-  
+
   try {
-    const list = await api('/api/accounts');
-    cachedAccounts = list; // Cache locally for real-time search filtering
+    // Fetch all accounts AND all users in parallel
+    const [list, users] = await Promise.all([
+      api('/api/accounts'),
+      api('/api/auth/users').catch(() => [])
+    ]);
+
+    // Build a map: userId -> username
+    userMap = {};
+    (users || []).forEach(u => { userMap[u.id] = u.username; });
+
+    cachedAccounts = list;
     renderManagerRegistryTable(list);
   } catch (e) {
     tableBody.innerHTML = `
@@ -652,9 +722,51 @@ async function loadManagerDashboard() {
   }
 }
 
+// Retrieve by ID — called from manager dashboard
+async function handleRetrieveById() {
+  const input = document.getElementById('retrieveByIdInput').value.trim();
+  const resultBox = document.getElementById('retrieveByIdResult');
+
+  if (!input) {
+    showToast('Please enter an Account UUID', 'error');
+    return;
+  }
+
+  resultBox.style.display = 'none';
+  resultBox.innerHTML = '';
+
+  try {
+    const acc = await api(`/api/accounts/${input}`);
+    const ownerName = acc.owner_id
+      ? (userMap[acc.owner_id] || acc.owner_id.substring(0, 8) + '...')
+      : 'System Shared';
+    resultBox.style.display = 'block';
+    resultBox.innerHTML = `
+      <div class="retrieve-result-card">
+        <div class="retrieve-result-title">&#10003; Account Found</div>
+        <div class="retrieve-result-grid">
+          <span class="r-label">Account ID</span><span class="r-value mono">${acc.id}</span>
+          <span class="r-label">Account Name</span><span class="r-value"><strong>${acc.name}</strong></span>
+          <span class="r-label">Owner Username</span><span class="r-value">${ownerName}</span>
+          <span class="r-label">Balance</span><span class="r-value balance-highlight">${formatCurrency(acc.balance)}</span>
+        </div>
+        <div class="retrieve-result-actions">
+          <button class="btn btn-secondary btn-small" onclick="openActivityLog('${acc.id}','${acc.name}',${acc.balance})">View Logs</button>
+          <button class="btn btn-secondary btn-small" onclick="openEditAccountName('${acc.id}','${acc.name}')">Edit Name</button>
+          <button class="btn btn-danger btn-small" onclick="promptManagerAuthDelete('${acc.id}','${acc.name}')">Delete</button>
+        </div>
+      </div>
+    `;
+    showToast('Account retrieved successfully', 'success');
+  } catch (e) {
+    resultBox.style.display = 'block';
+    resultBox.innerHTML = `<div class="retrieve-result-error">&#10007; No account found with that ID. ${e.message}</div>`;
+  }
+}
+
 function renderManagerRegistryTable(accounts) {
   const tableBody = document.getElementById('managerAccountsTableBody');
-  
+
   if (accounts.length === 0) {
     tableBody.innerHTML = `
       <tr>
@@ -663,48 +775,46 @@ function renderManagerRegistryTable(accounts) {
         </td>
       </tr>
     `;
-    
-    // Reset stats
     document.getElementById('managerTotalBalance').innerText = '$0.00';
     document.getElementById('managerTotalAccounts').innerText = '0';
     document.getElementById('managerTotalClients').innerText = '0';
     return;
   }
-  
+
   tableBody.innerHTML = '';
   let totalBalance = 0;
   const uniqueOwners = new Set();
-  
+
   accounts.forEach(acc => {
     totalBalance += (acc.balance || 0);
-    if (acc.owner_id) {
-      uniqueOwners.add(acc.owner_id);
-    }
-    
-    const revealed = !!managerRevealState[acc.id];
-    const ownerDisplay = acc.owner_id ? (revealed ? acc.owner_id : acc.owner_id.substring(0, 8) + '...') : 'System Shared';
-    const revealBtnLabel = revealed ? 'Hide' : 'Reveal';
+    if (acc.owner_id) uniqueOwners.add(acc.owner_id);
+
+    const ownerUsername = acc.owner_id
+      ? (userMap[acc.owner_id] || acc.owner_id.substring(0, 8) + '...')
+      : 'System';
 
     const row = document.createElement('tr');
     row.innerHTML = `
-      <td class="acc-id" title="${acc.id}">${acc.id.substring(0, 8)}...</td>
+      <td>
+        <button class="copy-id-btn" title="Click to copy full ID: ${acc.id}" onclick="copyToClipboard('${acc.id}', this)">
+          <span class="mono">${acc.id.substring(0, 12)}...</span>
+          <svg viewBox="0 0 24 24" width="11" height="11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </td>
       <td><strong>${acc.name}</strong></td>
-      <td class="owner-id" title="${acc.owner_id || 'System Shared'}">${ownerDisplay}</td>
+      <td><span class="owner-badge">${ownerUsername}</span></td>
       <td class="acc-balance">${formatCurrency(acc.balance)}</td>
       <td>
         <div class="actions" style="gap: 0.35rem;">
-          <button class="btn btn-secondary btn-small" onclick="openActivityLog('${acc.id}', '${acc.name}', ${acc.balance})" title="View activity audit log">
+          <button class="btn btn-secondary btn-small" onclick="openActivityLog('${acc.id}', '${acc.name}', ${acc.balance})" title="View audit log">
             <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             <span>Audit</span>
           </button>
-          <button class="btn btn-secondary btn-small" onclick="openEditAccountName('${acc.id}', '${acc.name}')" title="Rename Account">
+          <button class="btn btn-secondary btn-small" onclick="openEditAccountName('${acc.id}', '${acc.name}')" title="Update account name">
             <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-            <span>Edit</span>
+            <span>Update</span>
           </button>
-          <button class="btn btn-secondary btn-small" onclick="promptManagerAuth('${acc.id}')" title="Reveal owner id">
-            <span>${revealBtnLabel}</span>
-          </button>
-          <button class="btn btn-danger btn-small" onclick="promptManagerAuthDelete('${acc.id}', '${acc.name}')" title="Delete account records">
+          <button class="btn btn-danger btn-small" onclick="promptManagerAuthDelete('${acc.id}', '${acc.name}')" title="Delete account">
             <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             <span>Delete</span>
           </button>
@@ -713,28 +823,40 @@ function renderManagerRegistryTable(accounts) {
     `;
     tableBody.appendChild(row);
   });
-  
-  // Update Manager Stats
+
   document.getElementById('managerTotalBalance').innerText = formatCurrency(totalBalance);
   document.getElementById('managerTotalAccounts').innerText = accounts.length;
   document.getElementById('managerTotalClients').innerText = uniqueOwners.size;
 }
 
-// Manager search registry filtering
+// Copy account ID to clipboard
+function copyToClipboard(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<span style="color:var(--color-emerald)">&#10003; Copied!</span>';
+    setTimeout(() => { btn.innerHTML = orig; }, 2000);
+    showToast('Account ID copied to clipboard', 'success');
+  }).catch(() => {
+    showToast('Could not copy — please copy manually: ' + text, 'info');
+  });
+}
+
+// Manager search registry filtering (searches by name, id, or resolved username)
 function handleManagerSearch(e) {
   const query = e.target.value.toLowerCase().trim();
   if (!query) {
     renderManagerRegistryTable(cachedAccounts);
     return;
   }
-  
+
   const filtered = cachedAccounts.filter(acc => {
     const nameMatch = acc.name.toLowerCase().includes(query);
     const idMatch = acc.id.toLowerCase().includes(query);
-    const ownerMatch = acc.owner_id && acc.owner_id.toLowerCase().includes(query);
-    return nameMatch || idMatch || ownerMatch;
+    const ownerIdMatch = acc.owner_id && acc.owner_id.toLowerCase().includes(query);
+    const usernameMatch = acc.owner_id && userMap[acc.owner_id] && userMap[acc.owner_id].toLowerCase().includes(query);
+    return nameMatch || idMatch || ownerIdMatch || usernameMatch;
   });
-  
+
   renderManagerRegistryTable(filtered);
 }
 
@@ -789,9 +911,35 @@ window.addEventListener('load', () => {
   
   document.getElementById('refreshClientBtn').addEventListener('click', loadClientDashboard);
   document.getElementById('refreshManagerBtn').addEventListener('click', loadManagerDashboard);
-  
+
   // Manager search action
   document.getElementById('managerSearchInput').addEventListener('input', handleManagerSearch);
+
+  // Manager Retrieve by ID
+  document.getElementById('retrieveByIdBtn').addEventListener('click', handleRetrieveById);
+  document.getElementById('retrieveByIdInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleRetrieveById();
+  });
+
+  // Deposit button
+  document.getElementById('triggerDepositBtn').addEventListener('click', openDepositModal);
+  document.getElementById('submitDepositBtn').addEventListener('click', handleDeposit);
+
+  // Password eye toggle
+  document.getElementById('togglePasswordBtn').addEventListener('click', () => {
+    const pwdInput = document.getElementById('password');
+    const showIcon = document.getElementById('eyeIconShow');
+    const hideIcon = document.getElementById('eyeIconHide');
+    if (pwdInput.type === 'password') {
+      pwdInput.type = 'text';
+      showIcon.style.display = 'none';
+      hideIcon.style.display = 'block';
+    } else {
+      pwdInput.type = 'password';
+      showIcon.style.display = 'block';
+      hideIcon.style.display = 'none';
+    }
+  });
 
   // Manager auth modal wiring
   document.getElementById('managerAuthSubmitBtn').addEventListener('click', async () => {

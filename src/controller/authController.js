@@ -24,4 +24,17 @@ router.post('/login', (req, res) => {
   res.json({ token: user.id, username: user.username, role: user.role || 'client' });
 });
 
+// GET /api/auth/users — list all registered users (manager use; returns safe fields, no passwords)
+router.get('/users', (req, res) => {
+  const all = userRepo.findAll();
+  res.json(all);
+});
+
+// GET /api/auth/users/:id — get a single user by id
+router.get('/users/:id', (req, res) => {
+  const user = userRepo.findById(req.params.id);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  res.json({ id: user.id, username: user.username, role: user.role });
+});
+
 module.exports = router;

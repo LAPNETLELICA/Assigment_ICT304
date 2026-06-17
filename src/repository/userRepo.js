@@ -46,6 +46,11 @@ class UserRepo {
   findById(id) {
     return this._data.users.find(u => u.id === id) || null;
   }
+
+  // Return all users without exposing passwords
+  findAll() {
+    return this._data.users.map(u => ({ id: u.id, username: u.username, role: u.role }));
+  }
 }
 
 module.exports = UserRepo;

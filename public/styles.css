@@ -242,6 +242,94 @@ body {
   border-radius: 8px;
 }
 
+.btn-emerald {
+  background: linear-gradient(135deg, var(--color-emerald), var(--color-emerald-hover));
+  color: white;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+}
+
+.btn-emerald:hover {
+  background: linear-gradient(135deg, var(--color-emerald-hover), #047857);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+}
+
+/* Password eye toggle */
+.btn-eye {
+  position: absolute;
+  right: 0.85rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  padding: 0.2rem;
+  transition: var(--transition-fast);
+  z-index: 2;
+}
+
+.btn-eye:hover {
+  color: var(--color-indigo);
+}
+
+/* Copy ID button in manager table */
+.copy-id-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  transition: var(--transition-fast);
+  white-space: nowrap;
+}
+
+.copy-id-btn:hover {
+  background: rgba(99,102,241,0.12);
+  border-color: rgba(99,102,241,0.3);
+  color: #a5b4fc;
+}
+
+/* Transfer divider */
+.transfer-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 0.75rem 0;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  gap: 0.75rem;
+}
+
+.transfer-divider::before,
+.transfer-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+}
+
+/* Table header hint text */
+.th-hint {
+  font-size: 0.65rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Plain select (without icon padding) */
+select {
+  padding-left: 1rem;
+}
+
 .btn-icon {
   padding: 0.75rem;
 }
@@ -1027,6 +1115,133 @@ input:focus, select:focus {
   to { opacity: 1; transform: translateX(0); }
 }
 
+/* Retrieve by ID Panel */
+.retrieve-by-id-bar {
+  background: rgba(99, 102, 241, 0.07);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+}
+
+.retrieve-by-id-bar h3 {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.85rem;
+  color: var(--text-primary);
+}
+
+.retrieve-input-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.retrieve-input-row input {
+  flex: 1;
+  padding: 0.7rem 1rem;
+  font-family: monospace;
+  font-size: 0.85rem;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: white;
+}
+
+.retrieve-input-row input:focus {
+  border-color: var(--color-indigo);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
+  outline: none;
+}
+
+.retrieve-result {
+  margin-top: 1rem;
+  animation: fadeInScale 0.25s ease-out;
+}
+
+.retrieve-result-card {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 14px;
+  padding: 1.25rem;
+}
+
+.retrieve-result-title {
+  font-weight: 700;
+  color: var(--color-emerald);
+  margin-bottom: 0.85rem;
+  font-size: 0.95rem;
+}
+
+.retrieve-result-grid {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 0.5rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.88rem;
+}
+
+.r-label {
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.4px;
+  align-self: center;
+}
+
+.r-value {
+  color: var(--text-primary);
+}
+
+.r-value.mono {
+  font-family: monospace;
+  font-size: 0.78rem;
+  word-break: break-all;
+  color: var(--text-secondary);
+}
+
+.r-value.balance-highlight {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--color-emerald);
+  font-size: 1.05rem;
+}
+
+.retrieve-result-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.retrieve-result-error {
+  color: var(--color-rose);
+  background: rgba(244, 63, 94, 0.08);
+  border: 1px solid rgba(244, 63, 94, 0.2);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  font-size: 0.88rem;
+}
+
+/* Owner badge in manager table */
+.owner-badge {
+  display: inline-block;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
+  padding: 0.2rem 0.65rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+/* Mono utility for IDs */
+.mono {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .auth-buttons {
@@ -1048,4 +1263,8 @@ input:focus, select:focus {
     display: grid;
     grid-template-columns: 1fr 1fr;
   }
+  .retrieve-input-row {
+    flex-direction: column;
+  }
 }
+
