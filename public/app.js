@@ -75,8 +75,10 @@ async function refreshList() {
 async function signup() {
   const u = document.getElementById('username').value.trim();
   const p = document.getElementById('password').value;
+  const roleElem = document.getElementById('role');
+  const role = roleElem ? roleElem.value : 'client';
   try {
-    const res = await api('/api/auth/signup', { method: 'POST', body: JSON.stringify({ username: u, password: p }) });
+    const res = await api('/api/auth/signup', { method: 'POST', body: JSON.stringify({ username: u, password: p, role }) });
     document.getElementById('authResult').innerText = 'Signed up — please login';
   } catch (e) { document.getElementById('authResult').innerText = 'Error: ' + (e.message || e.error); }
 }
@@ -88,7 +90,8 @@ async function login() {
     const res = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ username: u, password: p }) });
     localStorage.setItem('token', res.token);
     localStorage.setItem('username', res.username);
-    document.getElementById('authResult').innerText = 'Welcome ' + res.username;
+    localStorage.setItem('role', res.role || 'client');
+    document.getElementById('authResult').innerText = 'Welcome ' + res.username + ' (' + (res.role || 'client') + ')';
     showDashboard();
   } catch (e) { document.getElementById('authResult').innerText = 'Login failed'; }
 }
@@ -96,7 +99,7 @@ async function login() {
 function showDashboard() {
   document.getElementById('authCard').style.display = 'none';
   document.getElementById('dashboardCard').style.display = 'block';
-  refreshList();
+  renderDashboardByRole();
 }
 
 function logout() {
@@ -159,6 +162,36 @@ function openTransferModal(defaultFrom) {
       alert('Transfer successful');
     } catch (e) { alert('Transfer failed: ' + e.message); }
   });
+}
+
+function renderDashboardByRole() {
+  const role = localStorage.getItem('role') || 'client';
+  if (role === 'manager') {
+    document.getElementById('newAccount').style.display = 'none';
+    document.getElementById('createResult').innerText = 'Manager view — all accounts';
+    const container = document.getElementById('listContainer');
+    container.innerText = 'Loading...';
+    api('/api/accounts').then(list => {
+      if (!Array.isArray(list) || list.length === 0) return container.innerText = 'No accounts';
+      const tpl = document.getElementById('rowTpl');
+      container.innerHTML = '';
+      list.forEach(acc => {
+        const node = tpl.content.cloneNode(true);
+        node.querySelector('.name').innerText = `${acc.name} — owner: ${acc.owner_id || 'n/a'}`;
+        const getBtn = node.querySelector('.btn-get');
+        getBtn.addEventListener('click', async () => {
+          const txs = await api('/api/accounts/' + acc.id + '/transactions');
+          alert(`Transactions for ${acc.name}:\n` + (txs||[]).map(t=>`${t.type} ${t.amount} ${t.date}`).join('\n'));
+        });
+        node.querySelector('.actions').querySelector('.btn-edit').style.display = 'none';
+        node.querySelector('.actions').querySelector('.btn-del').style.display = 'none';
+        container.appendChild(node);
+      });
+    }).catch(() => container.innerText = 'Error loading accounts');
+  } else {
+    document.getElementById('newAccount').style.display = 'inline-block';
+    refreshList();
+  }
 }
 
 // CSV export for transactions of an account

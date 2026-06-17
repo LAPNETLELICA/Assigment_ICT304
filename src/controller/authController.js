@@ -6,11 +6,11 @@ const userRepo = new UserRepo();
 
 // signup: { username, password }
 router.post('/signup', (req, res) => {
-  const { username, password } = req.body || {};
+  const { username, password, role } = req.body || {};
   if (!username || !password) return res.status(400).json({ error: 'username and password required' });
   const exists = userRepo.findByUsername(username);
   if (exists) return res.status(400).json({ error: 'user exists' });
-  const user = userRepo.create({ username, password });
+  const user = userRepo.create({ username, password, role });
   res.status(201).json(user);
 });
 
@@ -21,7 +21,7 @@ router.post('/login', (req, res) => {
   const user = userRepo.findByUsername(username);
   if (!user || user.password !== password) return res.status(401).json({ error: 'invalid credentials' });
   // demo token: user id
-  res.json({ token: user.id, username: user.username });
+  res.json({ token: user.id, username: user.username, role: user.role || 'client' });
 });
 
 module.exports = router;

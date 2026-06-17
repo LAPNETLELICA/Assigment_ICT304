@@ -53,4 +53,24 @@ describe('Integration: Account API', () => {
     expect(txs.body.length).toBeGreaterThanOrEqual(1);
     expect(txs.body[0].type).toBe('deposit');
   });
+
+  it('manager can view all accounts and transactions', async () => {
+    // create manager user
+    await request(app).post('/api/auth/signup').send({ username: 'mgr', password: 'p', role: 'manager' });
+    const lm = await request(app).post('/api/auth/login').send({ username: 'mgr', password: 'p' });
+    const mgrToken = lm.body.token;
+    // create a client and account
+    await request(app).post('/api/auth/signup').send({ username: 'c1', password: 'p' });
+    const lc = await request(app).post('/api/auth/login').send({ username: 'c1', password: 'p' });
+    const clientToken = lc.body.token;
+    const acc = await request(app).post('/api/accounts').send({ name: 'ClientAcc', owner_id: clientToken });
+    // manager lists all accounts
+    const list = await request(app).get('/api/accounts');
+    expect(list.status).toBe(200);
+    expect(Array.isArray(list.body)).toBe(true);
+    expect(list.body.find(a => a.id === acc.body.id)).toBeTruthy();
+    // manager can view transactions for that account
+    const txs = await request(app).get(`/api/accounts/${acc.body.id}/transactions`);
+    expect(txs.status).toBe(200);
+  });
 });

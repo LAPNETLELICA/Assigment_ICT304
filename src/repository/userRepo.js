@@ -32,10 +32,11 @@ class UserRepo {
 
   create(user) {
     const id = uuidv4();
-    const obj = { id, username: user.username, password: user.password };
+    const role = user.role || 'client';
+    const obj = { id, username: user.username, password: user.password, role };
     this._data.users.push(obj);
     writeData(this._data);
-    return { id, username: user.username };
+    return { id, username: user.username, role };
   }
 
   findByUsername(username) {
