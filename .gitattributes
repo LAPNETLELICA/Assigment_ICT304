@@ -1,2 +1,17 @@
-/mvnw text eol=lf
-*.cmd text eol=crlf
+# Normalize line endings for text files
+* text=auto eol=lf
+
+# Node artifacts to exclude from archives
+package-lock.json export-ignore
+node_modules/ export-ignore
+coverage/ export-ignore
+dist/ export-ignore
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.jar binary

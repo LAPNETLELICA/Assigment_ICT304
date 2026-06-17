@@ -1,10 +1,7 @@
-# Build stage
-FROM maven:3.9.6-eclipse-temurin-21 AS build
+FROM node:18-alpine
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm install --production
 COPY . .
-RUN mvn clean package -DskipTests
-
-# Run stage
-FROM eclipse-temurin:21-jdk-jammy
-COPY --from=build /target/*.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java","-jar","app.jar"]
+EXPOSE 3000
+CMD ["node", "src/server.js"]
