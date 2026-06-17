@@ -1,19 +1,46 @@
 {
-  "accounts": [
+  "users": [
     {
-      "id": "c8305c81-12e9-4522-a348-1e6de29a693d",
-      "name": "TxAcc",
-      "balance": 100
+      "id": "2d4feea4-5eba-44c6-be45-10575c6d05fd",
+      "username": "x",
+      "password": "p"
+    },
+    {
+      "id": "17e8e8fd-b662-4478-8c76-9d32ada9a197",
+      "username": "u1",
+      "password": "p"
+    },
+    {
+      "id": "25440468-f9b1-4a31-bdb5-44c18d7e9922",
+      "username": "tx",
+      "password": "p"
+    },
+    {
+      "id": "8f826731-0c93-4247-984d-5a4bcb1da920",
+      "username": "lelica",
+      "password": "1234",
+      "role": "client"
+    },
+    {
+      "id": "b1f1b0f1-9c4a-4d6e-8a1b-1234567890ab",
+      "username": "manager1",
+      "password": "mypass",
+      "role": "manager"
+    },
+    {
+      "id": "e0226bfe-06df-4dde-a619-80b3080374c1",
+      "username": "manager_admin1",
+      "password": "password123",
+      "role": "client"
     }
   ],
-  "transactions": [
+  "accounts": [
     {
-      "account_id": "c8305c81-12e9-4522-a348-1e6de29a693d",
-      "id": "a14f2cc3-e972-4531-b1a2-f0eef1c7cb1f",
-      "type": "deposit",
-      "amount": 100,
-      "description": "seed",
-      "date": "2026-06-17T11:09:26.867Z"
+      "id": "f27c5450-a1e6-4c8c-a16e-0460a8e77640",
+      "name": "ClientAcc",
+      "balance": 0,
+      "owner_id": "b39c8fe7-02ce-4527-a3aa-1e3ba05c4d52"
     }
-  ]
+  ],
+  "transactions": []
 }

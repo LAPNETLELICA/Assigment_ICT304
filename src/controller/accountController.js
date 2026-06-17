@@ -17,9 +17,18 @@ router.post('/', (req, res) => {
   }
 });
 
-// list accounts, optionally filtered by owner_id query param
+// list accounts: managers see all accounts; clients see only their accounts
 router.get('/', (req, res) => {
-  const ownerId = req.query.owner_id || req.query.ownerId || null;
+  const qOwner = req.query.owner_id || req.query.ownerId || null;
+  // if logged in as manager, allow full list or optional owner filter
+  if (req.user && req.user.role === 'manager') {
+    const all = service.getAll(qOwner || null);
+    return res.json(all);
+  }
+
+  // non-manager: owner must be provided or use authenticated user id
+  const ownerId = qOwner || (req.user ? req.user.id : null);
+  if (!ownerId) return res.status(401).json({ error: 'owner id required' });
   const all = service.getAll(ownerId);
   res.json(all);
 });

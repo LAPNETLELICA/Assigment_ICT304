@@ -1,64 +1,424 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Demo Accounts</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>Apex Vault — Premium Bank System</title>
+    <!-- Modern Premium Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <div class="container">
-      <div class="header">
-        <div class="hero">
-          <span class="logo">A</span>
-        </div>
-        <div>
-          <h1>Accounts Manager</h1>
-          <p class="muted">Simple UI to create, list, update and delete accounts.</p>
-        </div>
-      </div>
+    <!-- Background Gradient Grids -->
+    <div class="bg-glow"></div>
 
-      <div class="grid">
-        <section class="card" id="authCard">
-          <h2>Login / Sign up</h2>
-          <label>Username</label>
-          <input id="username" placeholder="your email or username" />
-          <label>Password</label>
-          <input id="password" type="password" placeholder="password" />
-          <label>Role</label>
-          <select id="role">
-            <option value="client">Client</option>
-            <option value="manager">Manager</option>
-          </select>
-          <div class="row">
-            <button id="signup" class="secondary">Sign up</button>
-            <button id="login">Login</button>
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <div class="app-container">
+      <!-- Top Navbar (Hidden when not logged in) -->
+      <header class="navbar" id="appNavbar" style="display: none;">
+        <div class="brand">
+          <div class="logo">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
           </div>
-          <div id="authResult" class="muted"></div>
+          <span class="logo-text">APEX<span>VAULT</span></span>
+        </div>
+        <div class="nav-right">
+          <div class="user-badge">
+            <div class="avatar" id="userAvatar">U</div>
+            <div class="user-info">
+              <span class="username" id="navUsername">Guest</span>
+              <span class="role" id="navRole">Client</span>
+            </div>
+          </div>
+          <button id="logoutBtn" class="btn btn-icon btn-logout" title="Logout">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+            <span>Logout</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="main-content">
+        <!-- Auth Section -->
+        <section class="auth-section" id="authSection">
+          <div class="auth-card">
+            <div class="auth-header">
+              <div class="logo large">
+                <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+              </div>
+              <h1>Welcome to Apex Vault</h1>
+              <p>Secure, premium banking at your fingertips</p>
+            </div>
+
+            <!-- Login / Signup Form -->
+            <div class="auth-form">
+              <div class="input-group">
+                <label for="username">Username</label>
+                <div class="input-wrapper">
+                  <svg class="input-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  <input id="username" type="text" placeholder="Enter username" required />
+                </div>
+              </div>
+
+              <div class="input-group">
+                <label for="password">Password</label>
+                <div class="input-wrapper">
+                  <svg class="input-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  <input id="password" type="password" placeholder="••••••••" required />
+                </div>
+              </div>
+
+              <div class="input-group" id="roleSelectorGroup">
+                <label for="role">Select Account Type</label>
+                <div class="input-wrapper">
+                  <svg class="input-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                  <select id="role">
+                    <option value="client">Client (Personal Banking)</option>
+                    <option value="manager">Manager (Admin Dashboard)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="auth-buttons">
+                <button id="loginBtn" class="btn btn-primary">
+                  <span>Sign In</span>
+                  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </button>
+                <button id="signupBtn" class="btn btn-secondary">Create Account</button>
+              </div>
+
+              <div class="auth-footer">
+                <p>Demo credentials: client username <code>lelica</code> (password <code>1234</code>)</p>
+              </div>
+            </div>
+          </div>
         </section>
 
-        <section class="card" id="dashboardCard" style="display:none">
-          <h2>Your Dashboard</h2>
-          <div style="margin-bottom:0.5rem">
-            <button id="newAccount" class="secondary">Create Bank Account</button>
-            <button id="logout" class="secondary">Logout</button>
+        <!-- Client Dashboard Section -->
+        <section class="dashboard-section" id="clientDashboard" style="display: none;">
+          <!-- Welcome Bar -->
+          <div class="dashboard-header">
+            <div>
+              <h1 class="welcome-text">Hello, <span id="clientName">User</span>!</h1>
+              <p class="subtitle">Here is your financial portfolio overview</p>
+            </div>
+            <div class="header-actions">
+              <button id="triggerCreateAccBtn" class="btn btn-primary">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span>New Account</span>
+              </button>
+              <button id="triggerTransferBtn" class="btn btn-accent">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="17" x2="7" y2="7"/><polyline points="7 17 7 7 17 7"/><line x1="7" y1="17" x2="17" y2="7"/><polyline points="17 7 17 17 7 17"/></svg>
+                <span>Transfer Funds</span>
+              </button>
+            </div>
           </div>
-          <div id="listContainer">Loading...</div>
-          <div id="createResult" class="muted"></div>
-        </section>
-      </div>
 
-      <template id="rowTpl">
-        <div class="row item">
-          <div class="flex name"></div>
-          <div class="actions">
-            <button class="btn-get">Details</button>
-            <button class="btn-edit">Edit</button>
-            <button class="btn-del">Delete</button>
+          <!-- Quick Stats -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon bg-indigo">
+                <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/></svg>
+              </div>
+              <div class="stat-details">
+                <span class="stat-title">Total Net Worth</span>
+                <h3 class="stat-value" id="clientTotalBalance">$0.00</h3>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon bg-emerald">
+                <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <div class="stat-details">
+                <span class="stat-title">Active Accounts</span>
+                <h3 class="stat-value" id="clientTotalAccounts">0</h3>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon bg-violet">
+                <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
+              <div class="stat-details">
+                <span class="stat-title">Transactions (This Month)</span>
+                <h3 class="stat-value" id="clientTotalTransactions">0</h3>
+              </div>
+            </div>
+          </div>
+
+          <!-- Accounts Section -->
+          <div class="section-title-wrapper">
+            <h2>Your Bank Accounts</h2>
+            <button id="refreshClientBtn" class="btn btn-secondary btn-small">
+              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              <span>Refresh</span>
+            </button>
+          </div>
+
+          <div class="accounts-grid" id="clientAccountsGrid">
+            <!-- Dynamic accounts cards will be loaded here -->
+            <div class="loading-state">
+              <div class="spinner"></div>
+              <span>Fetching accounts portfolio...</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Manager Dashboard Section -->
+        <section class="dashboard-section" id="managerDashboard" style="display: none;">
+          <!-- Welcome Bar -->
+          <div class="dashboard-header">
+            <div>
+              <h1 class="welcome-text">System Admin Panel</h1>
+              <p class="subtitle">Global banking database and audits</p>
+            </div>
+            <button id="refreshManagerBtn" class="btn btn-secondary">
+              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              <span>Refresh Database</span>
+            </button>
+          </div>
+
+          <!-- Manager Stats -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon bg-indigo">
+                <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+              </div>
+              <div class="stat-details">
+                <span class="stat-title">Total Capital Deposited</span>
+                <h3 class="stat-value" id="managerTotalBalance">$0.00</h3>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon bg-emerald">
+                <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+              <div class="stat-details">
+                <span class="stat-title">System Bank Accounts</span>
+                <h3 class="stat-value" id="managerTotalAccounts">0</h3>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon bg-rose">
+                <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+              </div>
+              <div class="stat-details">
+                <span class="stat-title">Unique Account Owners</span>
+                <h3 class="stat-value" id="managerTotalClients">0</h3>
+              </div>
+            </div>
+          </div>
+
+          <!-- Directory Header -->
+          <div class="directory-control-bar">
+            <h2>Account Registry</h2>
+            <div class="search-box">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="managerSearchInput" placeholder="Search by name, ID or owner..." />
+            </div>
+          </div>
+
+          <!-- Registry Table -->
+          <div class="card table-container">
+            <table class="registry-table">
+              <thead>
+                <tr>
+                  <th>Account ID</th>
+                  <th>Account Name</th>
+                  <th>Owner ID / Username</th>
+                  <th>Balance</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="managerAccountsTableBody">
+                <tr>
+                  <td colspan="5" class="table-loading">Loading account registry...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- CREATE ACCOUNT MODAL -->
+    <div id="createAccountModal" class="modal-backdrop" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Create Bank Account</h3>
+          <button class="btn-close modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="input-group">
+            <label for="newAccountName">Account Name</label>
+            <input type="text" id="newAccountName" placeholder="e.g., Savings Account, Checking" />
+          </div>
+          <div class="input-group">
+            <label for="newAccountBalance">Initial Deposit ($)</label>
+            <input type="number" id="newAccountBalance" value="100" min="0" step="0.01" />
           </div>
         </div>
-      </template>
+        <div class="modal-footer">
+          <button class="btn btn-secondary modal-close-btn">Cancel</button>
+          <button id="submitCreateAccountBtn" class="btn btn-primary">Create Account</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEPOSIT / WITHDRAW TRANSACTION MODAL -->
+    <div id="txModal" class="modal-backdrop" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 id="txModalTitle">Deposit Funds</h3>
+          <button class="btn-close modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="txAccountId" />
+          <input type="hidden" id="txType" value="deposit" />
+          
+          <div class="account-preview-box">
+            <span class="preview-label">Account Selected:</span>
+            <span class="preview-name" id="txAccountName">Savings</span>
+          </div>
+
+          <div class="input-group">
+            <label for="txAmount">Amount ($)</label>
+            <input type="number" id="txAmount" placeholder="0.00" min="0.01" step="0.01" />
+          </div>
+          <div class="input-group">
+            <label for="txDescription">Description</label>
+            <input type="text" id="txDescription" placeholder="Optional description" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary modal-close-btn">Cancel</button>
+          <button id="submitTxBtn" class="btn btn-primary">Submit Transaction</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSFER FUNDS MODAL -->
+    <div id="transferModal" class="modal-backdrop" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Transfer Money</h3>
+          <button class="btn-close modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="input-group">
+            <label for="transferFromSelect">Transfer From</label>
+            <select id="transferFromSelect">
+              <option value="">Select source account</option>
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="transferToSelect">Transfer To</label>
+            <select id="transferToSelect">
+              <option value="">Select destination account</option>
+            </select>
+          </div>
+          
+          <div class="or-separator"><span>OR ENTER ACCOUNT ID</span></div>
+          
+          <div class="input-group">
+            <label for="transferToInput">Destination Account ID</label>
+            <input type="text" id="transferToInput" placeholder="Paste account UUID directly" />
+          </div>
+
+          <div class="input-group">
+            <label for="transferAmount">Amount ($)</label>
+            <input type="number" id="transferAmount" placeholder="0.00" min="0.01" step="0.01" />
+          </div>
+          <div class="input-group">
+            <label for="transferDescription">Description</label>
+            <input type="text" id="transferDescription" placeholder="Description of transfer" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary modal-close-btn">Cancel</button>
+          <button id="submitTransferBtn" class="btn btn-accent">Send Transfer</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSACTIONS TIMELINE MODAL/DRAWER -->
+    <div id="timelineModal" class="modal-backdrop" style="display: none;">
+      <div class="modal-card modal-wide">
+        <div class="modal-header">
+          <div>
+            <h3 id="timelineModalTitle">Account Activity Log</h3>
+            <span class="modal-subtitle" id="timelineModalSubtitle">Account ID: 1234-5678</span>
+          </div>
+          <button class="btn-close modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="timeline-controls">
+            <div>
+              <strong>Current Balance: </strong>
+              <span id="timelineAccountBalance" class="highlight-balance">$0.00</span>
+            </div>
+            <button id="exportCsvBtn" class="btn btn-secondary btn-small">
+              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              <span>Export CSV</span>
+            </button>
+          </div>
+
+          <div class="timeline-container" id="timelineList">
+            <!-- Timeline items loaded dynamically -->
+            <div class="timeline-empty">
+              No transactions recorded for this account.
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary modal-close-btn">Close Activity Log</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDIT ACCOUNT MODAL -->
+    <div id="editAccountModal" class="modal-backdrop" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Edit Account Details</h3>
+          <button class="btn-close modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="editAccountId" />
+          <div class="input-group">
+            <label for="editAccountNameInput">Account Name</label>
+            <input type="text" id="editAccountNameInput" placeholder="Enter new account name" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary modal-close-btn">Cancel</button>
+          <button id="submitEditAccountBtn" class="btn btn-primary">Save Changes</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MANAGER AUTHENTICATION MODAL -->
+    <div id="managerAuthModal" class="modal-backdrop" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Manager Authentication</h3>
+          <button class="btn-close modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="managerAuthAccountId" />
+          <p>Enter your manager password to confirm this action or reveal sensitive details.</p>
+          <div class="input-group">
+            <label for="managerAuthPassword">Password</label>
+            <input type="password" id="managerAuthPassword" placeholder="Manager password" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary modal-close-btn">Cancel</button>
+          <button id="managerAuthSubmitBtn" class="btn btn-primary">Confirm</button>
+        </div>
+      </div>
     </div>
 
     <script src="/app.js"></script>
