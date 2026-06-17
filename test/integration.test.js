@@ -31,4 +31,16 @@ describe('Integration: Account API', () => {
     const list2 = await request(app).get('/api/accounts');
     expect(list2.body.find(a => a.id === a1.body.id)).toBeUndefined();
   });
+
+  it('performs deposit and lists transactions', async () => {
+    const a = await request(app).post('/api/accounts').send({ name: 'TxAcc' });
+    const id = a.body.id;
+    const tx = await request(app).post(`/api/accounts/${id}/transactions`).send({ type: 'deposit', amount: 100, description: 'seed' });
+    expect(tx.status).toBe(201);
+    const txs = await request(app).get(`/api/accounts/${id}/transactions`);
+    expect(txs.status).toBe(200);
+    expect(Array.isArray(txs.body)).toBe(true);
+    expect(txs.body.length).toBeGreaterThanOrEqual(1);
+    expect(txs.body[0].type).toBe('deposit');
+  });
 });

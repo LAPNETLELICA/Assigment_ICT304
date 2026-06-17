@@ -24,6 +24,30 @@ router.get('/:id', (req, res) => {
   res.json(acc);
 });
 
+router.post('/:id/transactions', (req, res) => {
+  try {
+    const tx = service.createTransaction(req.params.id, req.body);
+    res.status(201).json(tx);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.get('/:id/transactions', (req, res) => {
+  const txs = service.listTransactions(req.params.id);
+  res.json(txs);
+});
+
+router.post('/transfer', (req, res) => {
+  try {
+    const { from, to, amount, description } = req.body || {};
+    const out = service.transfer(from, to, amount, description);
+    res.status(201).json(out);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
 router.put('/:id', (req, res) => {
   try {
     const acc = service.updateAccount(req.params.id, req.body);

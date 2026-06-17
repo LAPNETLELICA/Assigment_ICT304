@@ -1,0 +1,42 @@
+:root{
+	--bg:#f7f9fc;
+	--card:#ffffff;
+	--muted:#6b7280;
+	--accent:#2563eb;
+	--accent-600:#1e40af;
+	--border:#e6eefc;
+}
+
+*{box-sizing:border-box}
+body{font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;background:var(--bg);color:#0f172a;margin:0;padding:2rem}
+.container{max-width:1000px;margin:0 auto;padding:0 1rem}
+.card{background:var(--card);border:1px solid var(--border);padding:1rem;border-radius:12px;margin-bottom:1rem;box-shadow:0 6px 18px rgba(16,24,40,0.04)}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.header h1{margin:0;font-weight:600;font-size:1.25rem}
+.header p{margin:0;color:var(--muted);font-size:0.95rem}
+.row{display:flex;gap:0.75rem;align-items:center}
+.row.item{justify-content:space-between;padding:0.6rem 0;border-bottom:1px dashed #f1f5f9}
+.flex{flex:1}
+.actions{display:flex;gap:0.5rem}
+button{padding:0.5rem 0.75rem;border-radius:8px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-weight:600}
+button.secondary{background:#fff;color:var(--accent);border:1px solid rgba(37,99,235,0.12)}
+button.danger{background:#ef4444}
+button:disabled{opacity:0.6;cursor:not-allowed}
+.muted{color:var(--muted);margin-top:0.5rem}
+input{padding:0.6rem;border:1px solid #e6eefc;border-radius:8px;display:block;margin:0.4rem 0 0.9rem 0;width:100%;outline:none}
+input:focus{box-shadow:0 6px 18px rgba(37,99,235,0.08);border-color:var(--accent)}
+
+.item .name{font-weight:600}
+.item .balance{color:var(--muted);text-align:right}
+.actions button{padding:0.35rem 0.6rem;border-radius:6px;background:#f1f5f9;color:#0f172a;border:1px solid rgba(15,23,42,0.04)}
+.actions button:last-child{margin-right:0}
+.actions button.transfer{background:#10b981;color:#fff;border:none}
+.id{font-family:monospace;font-size:0.85rem;color:var(--muted);margin-left:0.5rem}
+.createResult{font-size:0.95rem;color:var(--muted);margin-top:0.5rem}
+
+@media (min-width:760px){
+	.grid{display:grid;grid-template-columns:1fr 360px;gap:1rem;align-items:start}
+}
+
+.hero{margin-bottom:1rem}
+.logo{display:inline-block;width:40px;height:40px;background:linear-gradient(135deg,var(--accent),var(--accent-600));border-radius:8px;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}

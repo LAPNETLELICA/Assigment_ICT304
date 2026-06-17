@@ -1,0 +1,16 @@
+{
+  "accounts": {
+    "07119d92-5b57-4dd1-9abd-6d97b9837165": {
+      "id": "07119d92-5b57-4dd1-9abd-6d97b9837165",
+      "name": "From",
+      "balance": 70,
+      "transactions": []
+    },
+    "3f653159-e824-4a1d-b8fa-2f77212762f6": {
+      "id": "3f653159-e824-4a1d-b8fa-2f77212762f6",
+      "name": "To",
+      "balance": 40,
+      "transactions": []
+    }
+  }
+}
