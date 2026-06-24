@@ -40,4 +40,5 @@ class MemoryDB {
 
 // Export as a singleton
 const dbInstance = new MemoryDB();
+export { MemoryDB };
 export default dbInstance;

@@ -3,11 +3,13 @@ class Account {
    * @param {string} accountId - Unique identifier for the account
    * @param {string} ownerId - ID of the User who owns this account
    * @param {string} name - Name of the account (e.g., "Checking", "Savings")
+   * @param {string} accountPassword - Special password for this specific account
    */
-  constructor(accountId, ownerId, name) {
+  constructor(accountId, ownerId, name, accountPassword) {
     this.accountId = accountId;
     this.ownerId = ownerId;
     this.name = name;
+    this.accountPassword = accountPassword;
     this.balance = 0;
     this.status = 'ACTIVE'; // 'ACTIVE', 'CLOSED', 'DEACTIVATED'
     this.createdAt = new Date();

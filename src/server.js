@@ -1,24 +1,27 @@
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const accountRouter = require('./controller/accountController');
-const authRouter = require('./controller/authController');
-const authMiddleware = require('./middleware/authMiddleware');
+import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import accountRouter from './controller/accountController.js';
+import authRouter from './controller/authController.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-// attach demo auth before routes
-app.use(authMiddleware);
 
 app.use('/api/accounts', accountRouter);
 app.use('/api/auth', authRouter);
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 const port = process.env.PORT || 3000;
-if (require.main === module) {
+
+// Only bind to the port when not running inside the test suite.
+// supertest creates its own ephemeral connections so no explicit listen is needed.
+if (process.env.NODE_ENV !== 'test') {
   app.listen(port, () => console.log(`Server listening on ${port}`));
 }
 
-module.exports = app;
+export default app;

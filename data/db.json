@@ -44,15 +44,42 @@
       "username": "fadil",
       "password": "1234",
       "role": "client"
+    },
+    {
+      "id": "1fef9d0a-53cd-4f55-ba29-83ab1cc09471",
+      "username": "1245",
+      "password": "1234",
+      "role": "client"
+    },
+    {
+      "id": "3d57b03e-11e9-436d-88e9-72ba1bb88b62",
+      "username": "124",
+      "password": "124",
+      "role": "client"
     }
   ],
   "accounts": [
     {
-      "id": "1ac0e578-58a8-4a22-985e-d09dec500579",
+      "id": "bc88dc02-a512-4e3f-b0e6-2082feb610d4",
       "name": "ClientAcc",
       "balance": 0,
-      "owner_id": "96c4055e-debe-4be1-86dc-6f5b6f2cf8b6"
+      "owner_id": "4fd71f97-4004-4359-bf25-1676e2e7ac20"
+    },
+    {
+      "id": "c5c1ae5e-fcd0-4fa8-8ab0-d57067f148bd",
+      "name": "malika",
+      "balance": 1000,
+      "owner_id": "1b054397-b25c-4ba2-887e-658aee747286"
     }
   ],
-  "transactions": []
+  "transactions": [
+    {
+      "account_id": "c5c1ae5e-fcd0-4fa8-8ab0-d57067f148bd",
+      "id": "a8f5564b-9fa1-4d52-b6dd-3ca824a316ef",
+      "type": "deposit",
+      "amount": 1000,
+      "description": "salary",
+      "date": "2026-06-23T21:57:49.222Z"
+    }
+  ]
 }

@@ -127,18 +127,19 @@ async function handleLogin() {
 
 async function handleSignup() {
   const u = document.getElementById('username').value.trim();
+  const e = document.getElementById('email').value.trim();
   const p = document.getElementById('password').value;
   const role = document.getElementById('role').value;
   
-  if (!u || !p) {
-    showToast('Username and password are required to register', 'error');
+  if (!u || !e || !p) {
+    showToast('Username, email, and password are required to register', 'error');
     return;
   }
   
   try {
     await api('/api/auth/signup', {
       method: 'POST',
-      body: JSON.stringify({ username: u, password: p, role })
+      body: JSON.stringify({ username: u, email: e, password: p, role })
     });
     
     showToast('Registration successful! Please login.', 'success');
@@ -262,13 +263,18 @@ async function loadClientDashboard() {
 
 async function handleCreateAccount() {
   const name = document.getElementById('newAccountName').value.trim();
-  const balance = parseFloat(document.getElementById('newAccountBalance').value);
+  const initialDeposit = parseFloat(document.getElementById('newAccountBalance').value);
+  const accountPassword = document.getElementById('newAccountPassword').value;
   
   if (!name) {
     showToast('Account name is required', 'error');
     return;
   }
-  if (isNaN(balance) || balance < 0) {
+  if (!accountPassword) {
+    showToast('Account password is required', 'error');
+    return;
+  }
+  if (isNaN(initialDeposit) || initialDeposit < 0) {
     showToast('Invalid initial deposit amount', 'error');
     return;
   }
@@ -278,12 +284,14 @@ async function handleCreateAccount() {
       method: 'POST',
       body: JSON.stringify({
         name,
-        balance,
+        initialDeposit,
+        accountPassword,
         owner_id: activeUser.token
       })
     });
     
-    showToast(`Successfully created "${name}" with ${formatCurrency(balance)} initial deposit!`, 'success');
+    showToast(`Successfully created "${name}" with ${formatCurrency(initialDeposit)} initial deposit!`, 'success');
+    document.getElementById('newAccountPassword').value = '';
     closeModal('createAccountModal');
     loadClientDashboard();
   } catch (e) {
@@ -357,6 +365,15 @@ function openTxModal(id, name, type) {
   document.getElementById('txModalTitle').innerText = type === 'deposit' ? 'Deposit Funds' : 'Withdraw Funds';
   document.getElementById('txAmount').value = '';
   document.getElementById('txDescription').value = '';
+  document.getElementById('txAccountPassword').value = '';
+  
+  const pwdGroup = document.getElementById('txPasswordGroup');
+  if (type === 'withdraw') {
+    pwdGroup.style.display = 'block';
+  } else {
+    pwdGroup.style.display = 'none';
+  }
+  
   openModal('txModal');
 }
 
@@ -365,9 +382,14 @@ async function handleTransaction() {
   const type = document.getElementById('txType').value;
   const amount = parseFloat(document.getElementById('txAmount').value);
   const description = document.getElementById('txDescription').value.trim();
+  const accountPassword = document.getElementById('txAccountPassword').value;
   
   if (isNaN(amount) || amount <= 0) {
     showToast('Please enter a valid amount greater than 0', 'error');
+    return;
+  }
+  if (type === 'withdraw' && !accountPassword) {
+    showToast('Account password is required for withdrawals', 'error');
     return;
   }
   
@@ -377,6 +399,7 @@ async function handleTransaction() {
       body: JSON.stringify({
         type,
         amount,
+        accountPassword,
         description: description || `${type.charAt(0).toUpperCase() + type.slice(1)} via UI`
       })
     });
@@ -401,6 +424,7 @@ async function openTransferFunds() {
   document.getElementById('transferToInput').value = '';
   document.getElementById('transferAmount').value = '';
   document.getElementById('transferDescription').value = '';
+  document.getElementById('transferAccountPassword').value = '';
   
   try {
     // 1. Fetch current client accounts
@@ -436,6 +460,7 @@ async function handleTransfer() {
   const directInput = document.getElementById('transferToInput').value.trim();
   const amount = parseFloat(document.getElementById('transferAmount').value);
   const description = document.getElementById('transferDescription').value.trim();
+  const accountPassword = document.getElementById('transferAccountPassword').value;
   
   if (!from) {
     showToast('Source account is required', 'error');
@@ -461,6 +486,11 @@ async function handleTransfer() {
     showToast('Please enter a valid amount greater than 0', 'error');
     return;
   }
+
+  if (!accountPassword) {
+    showToast('Source account password is required', 'error');
+    return;
+  }
   
   try {
     await api('/api/accounts/transfer', {
@@ -469,6 +499,7 @@ async function handleTransfer() {
         from,
         to,
         amount,
+        accountPassword,
         description: description || 'Transfer via Web Portal'
       })
     });

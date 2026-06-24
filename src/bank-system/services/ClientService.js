@@ -7,16 +7,32 @@ class ClientService {
   /**
    * Create a new bank account for a user
    */
-  static createAccount(token, accountName) {
+  static createAccount(token, accountName, accountPassword, initialDeposit = 0) {
     const user = AuthService.validateToken(token, 'USER');
     
     if (!accountName || accountName.trim() === '') {
       throw new Error("Account name is required.");
     }
+    if (!accountPassword || accountPassword.trim() === '') {
+      throw new Error("Account password is required.");
+    }
 
     const accountId = db.generateAccountId();
-    const newAccount = new Account(accountId, user.userId, accountName);
+    const newAccount = new Account(accountId, user.userId, accountName, accountPassword);
     db.accounts.set(accountId, newAccount);
+
+    if (initialDeposit > 0) {
+      newAccount.deposit(initialDeposit);
+      const transaction = new Transaction(
+        db.generateTransactionId(),
+        'DEPOSIT',
+        initialDeposit,
+        null,
+        accountId,
+        user.userId
+      );
+      db.transactions.set(transaction.transactionId, transaction);
+    }
 
     return newAccount;
   }
@@ -112,9 +128,13 @@ class ClientService {
   /**
    * Withdraw money from an account
    */
-  static withdraw(token, accountId, amount) {
+  static withdraw(token, accountId, amount, accountPassword) {
     const account = this.getAccountById(token, accountId);
     const user = AuthService.validateToken(token);
+
+    if (account.accountPassword !== accountPassword) {
+      throw new Error("Unauthorized: Invalid account password.");
+    }
 
     account.withdraw(amount);
 
@@ -134,7 +154,7 @@ class ClientService {
   /**
    * Peer-to-Peer (P2P) Transfers between accounts
    */
-  static transfer(token, sourceAccountId, targetAccountId, amount) {
+  static transfer(token, sourceAccountId, targetAccountId, amount, accountPassword) {
     if (sourceAccountId === targetAccountId) {
       throw new Error("Cannot transfer to the same account.");
     }
@@ -142,6 +162,10 @@ class ClientService {
     const sourceAccount = this.getAccountById(token, sourceAccountId);
     const targetAccount = db.accounts.get(targetAccountId);
     const user = AuthService.validateToken(token);
+
+    if (sourceAccount.accountPassword !== accountPassword) {
+      throw new Error("Unauthorized: Invalid account password.");
+    }
 
     if (!targetAccount) {
       throw new Error("Target account not found.");

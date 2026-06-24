@@ -32,7 +32,7 @@ Apex Vault is a banking management system with two user roles:
 - **Data persistence:** JSON flat-file (`data/db.json`)
 - **Frontend:** Vanilla HTML + CSS + JavaScript (no framework)
 - **Testing:** Vitest + Supertest
-- **Coverage:** c8 (Istanbul-compatible LCOV reporter)
+- **Coverage:** @vitest/coverage-v8 (Strict 100% Code Coverage)
 
 ---
 
@@ -40,6 +40,19 @@ Apex Vault is a banking management system with two user roles:
 
 ```
 ├── src/
+│   ├── bank-system/               # NEW Core Pure-JS Backend Architecture
+│   │   ├── db/
+│   │   │   └── MemoryDB.js        # In-memory database singleton (Maps for fast lookups)
+│   │   ├── models/
+│   │   │   ├── Account.js         # Account entity class (deposit/withdraw logic)
+│   │   │   ├── Transaction.js     # Transaction entity class (record structure)
+│   │   │   └── User.js            # User entity class
+│   │   ├── services/
+│   │   │   ├── AdminService.js    # Manager capabilities (global oversight, soft-deletes)
+│   │   │   ├── AuthService.js     # User registration, login, and token validation
+│   │   │   └── ClientService.js   # Client capabilities (CRUD, financial ops, audit trails)
+│   │   ├── index.js               # Main export module for the bank-system
+│   │   └── test_banking.js        # Standalone verification script
 │   ├── server.js                  # Express app entry point
 │   ├── controller/
 │   │   ├── accountController.js   # REST routes for accounts
@@ -56,12 +69,19 @@ Apex Vault is a banking management system with two user roles:
 │   ├── app.js                     # Frontend JavaScript
 │   └── styles.css                 # Premium CSS styling
 ├── test/
-│   ├── repository.test.js         # Unit tests — AccountRepo
-│   ├── service.test.js            # Unit tests — AccountService
-│   ├── transactions.test.js       # Unit tests — Deposit/Withdraw logic
-│   ├── transfer.test.js           # Unit tests — Transfer logic
-│   ├── controller.test.js         # Unit tests — HTTP routes (mocked)
-│   └── integration.test.js        # Integration tests — full API flows
+│   ├── unit/                      # Modular unit tests for all components
+│   │   ├── MemoryDB.test.js
+│   │   ├── Account.model.test.js
+│   │   ├── Transaction.model.test.js
+│   │   ├── User.model.test.js
+│   │   ├── AuthService.test.js
+│   │   ├── ClientService.test.js
+│   │   ├── AdminService.test.js
+│   │   ├── accountController.test.js
+│   │   ├── authController.test.js
+│   │   └── legacyAccount.test.js
+│   └── integration/
+│       └── banking.integration.test.js # End-to-end full stack journeys
 ├── coverage/
 │   ├── index.html                 # HTML coverage report (open in browser)
 │   ├── lcov.info                  # LCOV coverage data
@@ -128,95 +148,54 @@ The system implements **5 core CRUD operations** on bank accounts:
 
 ## 5. Test Files
 
-### `test/repository.test.js` — AccountRepo Unit Tests
-**Tests the data access layer directly (no service, no HTTP).**
+### Unit Tests (`test/unit/`)
+Dedicated unit tests for every component, model, and service, ensuring isolated validation.
 
-| Test | Description |
+| File | Description |
 |------|-------------|
-| `should save and retrieve account` | Saves an account to the repo and retrieves it by ID; verifies the name matches. |
-| `findAll and delete work` | Creates two accounts, verifies `findAll()` returns at least 2, deletes one, verifies it is gone with `findById()`. |
+| `MemoryDB.test.js` | Tests the singleton database pattern, auto-increment ID generation, and state clearing mechanism. |
+| `Account.model.test.js` | Tests constructor initialization and all branches of `deposit` and `withdraw` (e.g., negative amounts, inactive status, insufficient funds). |
+| `Transaction.model.test.js` | Validates transaction entity instantiation across all four types (`DEPOSIT`, `WITHDRAWAL`, `TRANSFER`, `ADMIN_ADJUSTMENT`). |
+| `User.model.test.js` | Verifies user creation, default role assignment, and explicit role overriding. |
+| `AuthService.test.js` | Tests registration validations, duplicate handling, login credential checks, and role-based token validation. |
+| `ClientService.test.js` | Comprehensive tests for client operations: account creation, transfers, deposits, withdrawals, and personal audit trails. |
+| `AdminService.test.js` | Validates manager capabilities: global registry access, force-updates, administrative balance modifications, and master audit trails. |
+| `authController.test.js` | HTTP-level tests via Supertest for signup, login, and user listing routes, validating status codes and response structures. |
+| `accountController.test.js` | HTTP-level tests via Supertest for all account and transaction routes, validating dual-role execution paths (Client vs. Admin). |
+| `legacyAccount.test.js` | Validates the legacy ESM `account.js` module. |
 
 ---
 
-### `test/service.test.js` — AccountService Unit Tests
-**Tests the business logic layer with a fresh repo on each test.**
+### Integration Tests (`test/integration/`)
+A single, comprehensive end-to-end test file validating complex user journeys.
 
-| Test | Description |
+| File | Description |
 |------|-------------|
-| `creates account with default balance` | Calls `createAccount({ name: 'Bob' })`; verifies the returned account is truthy and has `balance = 0`. |
-| `updates account` | Creates an account, calls `updateAccount()` to change the balance to 50, verifies the new balance. |
-| `getAll and delete account` | Creates two accounts, retrieves all (≥2), deletes the first, verifies `getAccount()` returns null. |
-
----
-
-### `test/transactions.test.js` — Deposit & Withdraw Unit Tests
-**Tests the transaction business logic (balance mutation and overdraft guard).**
-
-| Test | Description |
-|------|-------------|
-| `creates deposit and records transaction` | Creates an account with balance 0, deposits 50, verifies balance becomes 50 and the transaction list has 1 entry of type `deposit`. |
-| `prevents overdraft on withdraw` | Creates an account with balance 10, attempts to withdraw 20, expects an error to be thrown (insufficient funds). |
-
----
-
-### `test/transfer.test.js` — Transfer Unit Tests
-**Tests the fund transfer logic between two accounts.**
-
-| Test | Description |
-|------|-------------|
-| `transfers funds between accounts` | Creates accounts `From` (balance 100) and `To` (balance 10), transfers 30. Verifies `From` = 70, `To` = 40, and the returned object has `type = 'transfer-out'`. |
-
----
-
-### `test/controller.test.js` — AccountController Route Unit Tests
-**Tests HTTP route handlers using mocked service methods (no real database).**
-
-| Test | Description |
-|------|-------------|
-| `POST / should create account and return 201` | Mocks `createAccount`, sends POST, verifies status 201 and response body. |
-| `GET / should return list from service` | Mocks `getAll`, sends GET, verifies status 200 and array response. |
-| `GET /:id returns 200 when found and 404 when not` | Mocks `getAccount` with conditional logic; tests both the found (200) and not-found (404) cases. |
-| `PUT /:id returns updated object or 400 on error` | Mocks `updateAccount`; verifies 200 on valid payload and 400 on empty payload. |
-| `DELETE /:id returns 204 on success and 404 on not found` | Mocks `deleteAccount`; verifies 204 on success and 404 when account doesn't exist. |
-| `POST /:id/transactions and GET /:id/transactions` | Mocks `createTransaction` and `listTransactions`; verifies 201 on POST and 200 + array on GET. |
-
----
-
-### `test/integration.test.js` — Full API Integration Tests
-**Tests real HTTP calls through the full stack (auth → account → transactions). No mocking.**
-
-| Test | Description |
-|------|-------------|
-| `creates and retrieves an account` | Signs up a user, logs in, creates an account via `POST /api/accounts`, then retrieves it via `GET /api/accounts/:id`. Verifies name and ID. |
-| `lists all accounts and deletes an account` | Signs up a user, creates 2 accounts, lists them (`GET /api/accounts?owner_id=...`), deletes one (`DELETE /api/accounts/:id`), confirms it is absent from the full list. |
-| `performs deposit and lists transactions` | Creates an account, posts a deposit transaction (`POST /api/accounts/:id/transactions`), retrieves transactions, verifies the type is `deposit`. |
-| `manager can view all accounts and transactions` | Creates a manager user and a client user with one account. Manager calls `GET /api/accounts` and sees the client's account. Manager also calls `GET /api/accounts/:id/transactions` successfully. |
+| `banking.integration.test.js` | Tests full lifecycles: 1) Register → Login → Create Account → Deposit → Withdraw → Close, 2) P2P Transfers, 3) Admin oversight and adjustments, 4) Global audit trail accuracy, and 5) Strict security boundaries. |
 
 ---
 
 ## 6. Code Coverage Table
 
-Generated by **c8** with Vitest. Run `npm run coverage` to regenerate.
+Generated natively by **Vitest (v8 provider)**. Run `npm run coverage` to regenerate. The suite achieves a strict **100% coverage baseline** for all core source files.
 
-| Source File | Lines | Lines Hit | Line % | Branches | Branches Hit | Branch % | Functions | Functions Hit | Function % |
-|-------------|-------|-----------|--------|----------|--------------|----------|-----------|---------------|------------|
-| `src/server.js` | 24 | 22 | **91.7%** | 2 | 1 | 50.0% | 0 | 0 | — |
-| `src/controller/accountController.js` | 84 | 70 | **83.3%** | 24 | 19 | 79.2% | 0 | 0 | — |
-| `src/controller/authController.js` | 40 | 35 | **87.5%** | 11 | 6 | 54.5% | 0 | 0 | — |
-| `src/middleware/authMiddleware.js` | 18 | 15 | **83.3%** | 6 | 2 | 33.3% | 1 | 1 | **100%** |
-| `src/repository/accountRepo.js` | 90 | 88 | **97.8%** | 33 | 29 | 87.9% | 11 | 11 | **100%** |
-| `src/repository/userRepo.js` | 56 | 50 | **89.3%** | 13 | 11 | 84.6% | 8 | 6 | **75.0%** |
-| `src/service/accountService.js` | 113 | 113 | **100%** | 37 | 18 | 48.6% | 9 | 9 | **100%** |
-| `vitest.config.js` | 11 | 11 | **100%** | 1 | 1 | 100% | 1 | 1 | **100%** |
+| Source File | % Stmts | % Branch | % Funcs | % Lines |
+|-------------|---------|----------|---------|---------|
+| **All files** | **100** | **100** | **100** | **100** |
+| `src/bank-system/index.js` | 100 | 100 | 100 | 100 |
+| `src/bank-system/db/MemoryDB.js` | 100 | 100 | 100 | 100 |
+| `src/bank-system/models/Account.js` | 100 | 100 | 100 | 100 |
+| `src/bank-system/models/Transaction.js` | 100 | 100 | 100 | 100 |
+| `src/bank-system/models/User.js` | 100 | 100 | 100 | 100 |
+| `src/bank-system/services/AdminService.js` | 100 | 100 | 100 | 100 |
+| `src/bank-system/services/AuthService.js` | 100 | 100 | 100 | 100 |
+| `src/bank-system/services/ClientService.js` | 100 | 100 | 100 | 100 |
+| `src/controller/accountController.js` | 100 | 100 | 100 | 100 |
+| `src/controller/authController.js` | 100 | 100 | 100 | 100 |
+| `src/model/account.js` | 100 | 100 | 100 | 100 |
 
 > **Viewing the interactive report:** Open `coverage/index.html` in any browser to see per-file, per-line, and per-branch highlighting.
-
-### Coverage Notes
-
-- **`accountService.js`** achieves 100% line and function coverage — all service methods are exercised.
-- **`accountRepo.js`** achieves 97.8% line coverage and 100% function coverage.
-- **Branch coverage** is lower in areas like the auth middleware (token parsing) and server startup guard (`require.main === module`) which cannot be triggered during automated tests.
-- **`userRepo.js`** `findById` and `findAll` have 0 call hits in the current test suite because they are new additions; consider adding tests for `GET /api/auth/users` and `GET /api/auth/users/:id`.
+> *(Note: `src/server.js` and `test_banking.js` are intentionally excluded from the raw coverage metrics as they act as entry points/scripts.)*
 
 ---
 

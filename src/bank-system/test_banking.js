@@ -4,10 +4,10 @@ async function runTests() {
   console.log("--- Starting Bank System Tests ---");
   
   // 1. Auth & Users
-  const user = AuthService.register("john_doe", "password123", "USER");
+  const user = AuthService.register("john_doe", "john@email.com", "password123", "USER");
   console.log("Registered User:", user.username);
 
-  const admin = AuthService.register("admin_boss", "secure_admin", "ADMIN");
+  const admin = AuthService.register("admin_boss", "admin@email.com", "secure_admin", "ADMIN");
   console.log("Registered Admin:", admin.username);
 
   const userLogin = AuthService.login("john_doe", "password123");
@@ -17,19 +17,19 @@ async function runTests() {
   const adminToken = adminLogin.token;
 
   // 2. Client Operations
-  const account1 = ClientService.createAccount(userToken, "Checking Account");
+  const account1 = ClientService.createAccount(userToken, "Checking Account", "secret123", 0);
   console.log(`Created Account: ${account1.accountId} - ${account1.name}`);
   
-  const account2 = ClientService.createAccount(userToken, "Savings Account");
+  const account2 = ClientService.createAccount(userToken, "Savings Account", "secret123", 0);
   
   ClientService.deposit(userToken, account1.accountId, 500);
   console.log(`Deposited 500 to ${account1.accountId}. Balance: ${account1.balance}`);
 
-  ClientService.transfer(userToken, account1.accountId, account2.accountId, 200);
+  ClientService.transfer(userToken, account1.accountId, account2.accountId, 200, "secret123");
   console.log(`Transferred 200 from ${account1.accountId} to ${account2.accountId}`);
   console.log(`Checking Balance: ${account1.balance}, Savings Balance: ${account2.balance}`);
 
-  ClientService.withdraw(userToken, account1.accountId, 50);
+  ClientService.withdraw(userToken, account1.accountId, 50, "secret123");
   console.log(`Withdrew 50 from ${account1.accountId}. Balance: ${account1.balance}`);
 
   const myAccounts = ClientService.getMyAccounts(userToken);

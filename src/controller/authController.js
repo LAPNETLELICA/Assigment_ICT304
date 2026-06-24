@@ -1,40 +1,48 @@
-const express = require('express');
+import express from 'express';
+import { AuthService, MemoryDB } from '../bank-system/index.js';
+
 const router = express.Router();
-const UserRepo = require('../repository/userRepo');
 
-const userRepo = new UserRepo();
+function extractToken(req) {
+  const auth = req.headers['authorization'] || req.query.token || (req.body && req.body.token);
+  if (!auth) return null;
+  return (typeof auth === 'string' && auth.startsWith('Bearer ')) ? auth.slice(7) : auth;
+}
 
-// signup: { username, password }
 router.post('/signup', (req, res) => {
-  const { username, password, role } = req.body || {};
-  if (!username || !password) return res.status(400).json({ error: 'username and password required' });
-  const exists = userRepo.findByUsername(username);
-  if (exists) return res.status(400).json({ error: 'user exists' });
-  const user = userRepo.create({ username, password, role });
-  res.status(201).json(user);
+  try {
+    const { username, email, password, role } = req.body;
+    const user = AuthService.register(username, email, password, role || 'USER');
+    // Hide password hash
+    res.status(201).json({ id: user.userId, username: user.username, email: user.email, role: user.role });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
 });
 
-// login: returns a simple token (user id) for demo purposes
 router.post('/login', (req, res) => {
-  const { username, password } = req.body || {};
-  if (!username || !password) return res.status(400).json({ error: 'username and password required' });
-  const user = userRepo.findByUsername(username);
-  if (!user || user.password !== password) return res.status(401).json({ error: 'invalid credentials' });
-  // demo token: user id
-  res.json({ token: user.id, username: user.username, role: user.role || 'client' });
+  try {
+    const { username, password } = req.body;
+    const { token, user } = AuthService.login(username, password);
+    res.json({ token, id: user.userId, username: user.username, role: user.role, email: user.email });
+  } catch (e) {
+    res.status(401).json({ error: e.message });
+  }
 });
 
-// GET /api/auth/users — list all registered users (manager use; returns safe fields, no passwords)
 router.get('/users', (req, res) => {
-  const all = userRepo.findAll();
-  res.json(all);
+  // Simple check for users, hiding passwords
+  const users = Array.from(MemoryDB.users.values()).map(u => ({
+    id: u.userId, username: u.username, role: u.role, email: u.email
+  }));
+  res.json(users);
 });
 
-// GET /api/auth/users/:id — get a single user by id
 router.get('/users/:id', (req, res) => {
-  const user = userRepo.findById(req.params.id);
+  const user = MemoryDB.users.get(req.params.id);
   if (!user) return res.status(404).json({ error: 'User not found' });
-  res.json({ id: user.id, username: user.username, role: user.role });
+  res.json({ id: user.userId, username: user.username, role: user.role, email: user.email });
 });
 
-module.exports = router;
+export { extractToken };
+export default router;

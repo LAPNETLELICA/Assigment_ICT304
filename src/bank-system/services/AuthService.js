@@ -5,13 +5,14 @@ class AuthService {
   /**
    * Register a new user
    * @param {string} username 
+   * @param {string} email
    * @param {string} password 
    * @param {string} role 'USER' or 'ADMIN'
    * @returns {User}
    */
-  static register(username, password, role = 'USER') {
-    if (!username || !password) {
-      throw new Error("Username and password are required.");
+  static register(username, email, password, role = 'USER') {
+    if (!username || !email || !password) {
+      throw new Error("Username, email, and password are required.");
     }
 
     // Check if username already exists
@@ -19,13 +20,16 @@ class AuthService {
       if (user.username === username) {
         throw new Error("Username already taken.");
       }
+      if (user.email === email) {
+        throw new Error("Email already registered.");
+      }
     }
 
     const userId = db.generateUserId();
     // In a real app, hash the password (e.g., with bcrypt)
     const passwordHash = `hashed_${password}`; 
     
-    const newUser = new User(userId, username, passwordHash, role);
+    const newUser = new User(userId, username, email, passwordHash, role);
     db.users.set(userId, newUser);
     return newUser;
   }
