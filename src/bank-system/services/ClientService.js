@@ -22,14 +22,14 @@ class ClientService {
     db.accounts.set(accountId, newAccount);
 
     if (initialDeposit > 0) {
-      newAccount.deposit(initialDeposit);
       const transaction = new Transaction(
         db.generateTransactionId(),
         'DEPOSIT',
         initialDeposit,
         null,
         accountId,
-        user.userId
+        user.userId,
+        'PENDING'
       );
       db.transactions.set(transaction.transactionId, transaction);
     }
@@ -110,15 +110,15 @@ class ClientService {
     const account = this.getAccountById(token, accountId);
     const user = AuthService.validateToken(token);
 
-    account.deposit(amount);
-
+    // Create a pending transaction. Balance is NOT updated until Manager approves.
     const transaction = new Transaction(
       db.generateTransactionId(),
       'DEPOSIT',
       amount,
       null,
       accountId,
-      user.userId
+      user.userId,
+      'PENDING'
     );
     db.transactions.set(transaction.transactionId, transaction);
 
@@ -144,7 +144,8 @@ class ClientService {
       amount,
       accountId,
       null,
-      user.userId
+      user.userId,
+      'SUCCESSFUL'
     );
     db.transactions.set(transaction.transactionId, transaction);
 
@@ -154,17 +155,24 @@ class ClientService {
   /**
    * Peer-to-Peer (P2P) Transfers between accounts
    */
-  static transfer(token, sourceAccountId, targetAccountId, amount, accountPassword) {
-    if (sourceAccountId === targetAccountId) {
+  static transfer(token, sourceAccountId, targetBankId, amount, accountPassword) {
+    const sourceAccount = this.getAccountById(token, sourceAccountId);
+    const user = AuthService.validateToken(token);
+
+    if (sourceAccount.bankId === targetBankId) {
       throw new Error("Cannot transfer to the same account.");
     }
 
-    const sourceAccount = this.getAccountById(token, sourceAccountId);
-    const targetAccount = db.accounts.get(targetAccountId);
-    const user = AuthService.validateToken(token);
-
     if (sourceAccount.accountPassword !== accountPassword) {
       throw new Error("Unauthorized: Invalid account password.");
+    }
+
+    let targetAccount = null;
+    for (const acc of db.accounts.values()) {
+      if (acc.bankId === targetBankId) {
+        targetAccount = acc;
+        break;
+      }
     }
 
     if (!targetAccount) {
@@ -183,8 +191,9 @@ class ClientService {
       'TRANSFER',
       amount,
       sourceAccountId,
-      targetAccountId,
-      user.userId
+      targetAccount.accountId,
+      user.userId,
+      'SUCCESSFUL'
     );
     db.transactions.set(transaction.transactionId, transaction);
 

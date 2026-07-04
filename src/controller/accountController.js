@@ -131,4 +131,27 @@ router.delete('/:id', (req, res) => {
   }
 });
 
+// Manager Validation Endpoints
+router.put('/:id/validate', (req, res) => {
+  try {
+    const token = extractToken(req);
+    const { approve } = req.body;
+    const account = AdminService.validateAccount(token, req.params.id, approve !== false);
+    res.json(account);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+router.put('/transactions/:transactionId/validate', (req, res) => {
+  try {
+    const token = extractToken(req);
+    const { approve } = req.body;
+    const transaction = AdminService.validateDeposit(token, req.params.transactionId, approve !== false);
+    res.json(transaction);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
 export default router;

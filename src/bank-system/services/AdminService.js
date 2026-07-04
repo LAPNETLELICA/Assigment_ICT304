@@ -46,13 +46,66 @@ class AdminService {
       account.name = updates.name;
     }
     if (updates.status !== undefined) {
-      if (!['ACTIVE', 'CLOSED', 'DEACTIVATED'].includes(updates.status)) {
+      if (!['PENDING', 'ACTIVE', 'CLOSED', 'DEACTIVATED', 'REJECTED'].includes(updates.status)) {
         throw new Error("Invalid status.");
       }
       account.status = updates.status;
     }
 
     return account;
+  }
+
+  /**
+   * Validate a pending account creation request
+   */
+  static validateAccount(token, accountId, approve = true) {
+    AuthService.validateToken(token, 'ADMIN');
+
+    const account = db.accounts.get(accountId);
+    if (!account) {
+      throw new Error("Account not found.");
+    }
+    if (account.status !== 'PENDING') {
+      throw new Error("Account is not in PENDING state.");
+    }
+
+    account.status = approve ? 'ACTIVE' : 'REJECTED';
+    return account;
+  }
+
+  /**
+   * Validate a pending deposit transaction
+   */
+  static validateDeposit(token, transactionId, approve = true) {
+    AuthService.validateToken(token, 'ADMIN');
+
+    const transaction = db.transactions.get(transactionId);
+    if (!transaction) {
+      throw new Error("Transaction not found.");
+    }
+    if (transaction.type !== 'DEPOSIT') {
+      throw new Error("Only deposits require validation.");
+    }
+    if (transaction.status !== 'PENDING') {
+      throw new Error("Transaction is not in PENDING state.");
+    }
+
+    if (approve) {
+      const targetAccount = db.accounts.get(transaction.targetAccountId);
+      if (!targetAccount) {
+        throw new Error("Target account not found.");
+      }
+      // Depending on rules, you might want to allow deposit to pending accounts, but usually it must be active.
+      if (targetAccount.status !== 'ACTIVE') {
+        throw new Error("Target account is not ACTIVE.");
+      }
+      targetAccount.balance += transaction.amount;
+      transaction.status = 'SUCCESSFUL';
+    } else {
+      transaction.status = 'REJECTED';
+    }
+
+    return transaction;
   }
 
   /**

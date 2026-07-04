@@ -7,13 +7,14 @@ class Transaction {
    * @param {string|null} targetAccountId - Account funds were sent to
    * @param {string} initiatorId - User ID who initiated this action
    */
-  constructor(transactionId, type, amount, sourceAccountId, targetAccountId, initiatorId) {
+  constructor(transactionId, type, amount, sourceAccountId, targetAccountId, initiatorId, status = 'PENDING') {
     this.transactionId = transactionId;
     this.type = type;
     this.amount = amount;
     this.sourceAccountId = sourceAccountId;
     this.targetAccountId = targetAccountId;
     this.initiatorId = initiatorId;
+    this.status = status; // 'PENDING', 'SUCCESSFUL', 'REJECTED'
     this.timestamp = new Date();
   }
 }

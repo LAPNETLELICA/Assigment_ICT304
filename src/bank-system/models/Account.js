@@ -5,13 +5,14 @@ class Account {
    * @param {string} name - Name of the account (e.g., "Checking", "Savings")
    * @param {string} accountPassword - Special password for this specific account
    */
-  constructor(accountId, ownerId, name, accountPassword) {
+  constructor(accountId, ownerId, name, accountPassword, bankId = null) {
     this.accountId = accountId;
     this.ownerId = ownerId;
     this.name = name;
     this.accountPassword = accountPassword;
+    this.bankId = bankId || `BNK-${Math.floor(100000 + Math.random() * 900000)}`;
     this.balance = 0;
-    this.status = 'ACTIVE'; // 'ACTIVE', 'CLOSED', 'DEACTIVATED'
+    this.status = 'PENDING'; // 'PENDING', 'ACTIVE', 'CLOSED', 'DEACTIVATED'
     this.createdAt = new Date();
   }
 
